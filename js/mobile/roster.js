@@ -6,7 +6,7 @@
 import { badge, clear, el, emptyState, loadFailed, spinner } from '../ui.js';
 import { fmtDate, fmtPlainDate } from '../format.js';
 import { blindNotice } from '../logic/cleanup.js';
-import { GROUPS, SORTS, arrange, coverage, loadRoster, rememberSort, savedSort, tally } from '../logic/roster.js';
+import { GROUPS, SORTS, arrange, countsText, coverage, loadRoster, rememberSort, savedSort, tally } from '../logic/roster.js';
 
 export function createRosterView() {
   const node = el('div', { class: 'mview' });
@@ -87,7 +87,7 @@ export function createRosterView() {
       el('span', { class: 'mroster__name' }, m.name || '（沒有名字）'),
       el('span', { class: 'mroster__meta' }, [
         m.group === 'spoke'
-          ? el('span', { class: 'muted' }, `${m.days} 天・${m.messages} 則`)
+          ? el('span', { class: 'muted' }, countsText(data.months, m.counts))
           : m.join_at && m.group === 'new' && el('span', { class: 'muted' }, `${fmtDate(m.join_at)} 加入`),
         badge(GROUPS[m.group].label, GROUPS[m.group].tone),
       ]),

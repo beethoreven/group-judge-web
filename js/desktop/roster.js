@@ -7,7 +7,7 @@ import { badge, clear, el, emptyState, loadFailed, spinner } from '../ui.js';
 import { fmtDate, fmtPlainDate } from '../format.js';
 import { blindNotice } from '../logic/cleanup.js';
 import { lastSpoke } from '../logic/members.js';
-import { GROUPS, SORTS, arrange, coverage, loadRoster, rememberSort, savedSort, tally } from '../logic/roster.js';
+import { GROUPS, SORTS, arrange, coverage, loadRoster, monthLabel, rememberSort, savedSort, tally } from '../logic/roster.js';
 
 export function createRosterView() {
   const node = el('div', { class: 'view' });
@@ -85,8 +85,7 @@ export function createRosterView() {
         el('th', { class: 'table__num' }, '#'),
         el('th', {}, 'LINE 名稱'),
         el('th', {}, '區間內'),
-        el('th', { class: 'table__num' }, '發話天數'),
-        el('th', { class: 'table__num' }, '則數'),
+        ...data.months.map((month) => el('th', { class: 'table__num' }, `${monthLabel(month)}則數`)),
         el('th', {}, '最後發話'),
         el('th', {}, '加入群組'),
       ])),
@@ -94,8 +93,7 @@ export function createRosterView() {
         el('td', { class: 'table__num muted' }, String(index + 1)),
         el('td', { class: 'table__name' }, m.name || '（沒有名字）'),
         el('td', {}, badge(GROUPS[m.group].label, GROUPS[m.group].tone)),
-        el('td', { class: 'table__num' }, m.days ? String(m.days) : '—'),
-        el('td', { class: 'table__num' }, m.messages ? String(m.messages) : '—'),
+        ...m.counts.map((count) => el('td', { class: 'table__num' }, count ? String(count) : '—')),
         el('td', { class: 'nowrap' }, lastSpoke(m, fmtDate)),
         el('td', { class: 'nowrap' }, m.join_at ? fmtDate(m.join_at) : el('span', { class: 'muted' }, '—')),
       ]))),

@@ -84,6 +84,17 @@ export function arrange(members, { groups, keyword = '', sort }) {
     .sort((a, b) => compare(a.name || '', b.name || '') || a.user_id - b.user_id);
 }
 
+/** '2026-08' → '8 月'。 */
+export const monthLabel = (month) => `${Number(month.slice(5))} 月`;
+
+/**
+ * 一個人在區間裡每個月說了幾則，寫成一句：「8 月 12 則・9 月 3 則」。
+ * months 是後端給的月份清單，counts 的順序跟它一樣（後端一個人一個月記一個數字）。
+ */
+export function countsText(months, counts) {
+  return months.map((month, i) => `${monthLabel(month)} ${counts[i]} 則`).join('・');
+}
+
 /** 各群組幾個人。 */
 export function tally(members) {
   const out = { spoke: 0, new: 0, silent: 0 };

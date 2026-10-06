@@ -65,7 +65,7 @@ export function databaseNote(db) {
   if (db.quota_hours === null) return `${used}。每一則訊息都立刻寫入。`;
   const quota = `${used}（免費額度一個月 ${db.quota_hours} 小時）`;
   return db.saving
-    ? `${quota}，已經退回省電模式：同一個人當天第三則以後的訊息先記著、晚一點才寫入，下個月自動恢復。誰有沒有發話不受影響。`
+    ? `${quota}，已經退回省電模式：每個人這個月的第一則照樣立刻寫入，之後的先記著、晚一點才補上，下個月自動恢復。誰有沒有發話不受影響。`
     : `${quota}。每一則訊息都立刻寫入；到 ${db.saving_after_hours} 小時會退回省電模式，並私訊通知管理員。`;
 }
 
@@ -176,7 +176,7 @@ function askMarkLeft(missing) {
 export async function pruneOldRecords() {
   const ok = await confirmDialog({
     title: '清除半年以前的紀錄？',
-    body: '會刪掉半年以前的發話紀錄（誰在哪一天說了幾則），刪了就拿不回來。成員資料、每個月存的名單與白名單不受影響；每個人最後一次發話的那一筆也會留著。',
+    body: '會刪掉半年以前的發話紀錄（誰在哪個月說了幾則），刪了就拿不回來。成員資料、每個月存的名單與白名單不受影響；每個人最後一次發話的那一筆也會留著。',
     confirmText: '清除',
     cancelText: '取消',
     danger: true,
