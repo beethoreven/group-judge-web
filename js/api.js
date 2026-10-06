@@ -5,7 +5,7 @@
  */
 
 // 前端跑在 localhost 上就是本機開發，沒有第二種可能——正式站掛在
-// Cloudflare 的網域下。
+// GitHub Pages（beethoreven.github.io/group-judge-web/）。
 const HOST = window.location.hostname;
 export const IS_LOCAL = HOST === 'localhost' || HOST === '127.0.0.1' || HOST === '[::1]';
 

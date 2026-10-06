@@ -1,9 +1,0 @@
-# 不部署到 Cloudflare 的檔案（語法同 .gitignore）。
-dev_server.py
-README.md
-wrangler.jsonc
-.assetsignore
-.gitignore
-.git
-.DS_Store
-__pycache__

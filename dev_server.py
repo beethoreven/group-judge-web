@@ -7,7 +7,8 @@
   剛改的東西瀏覽器根本不會重抓，畫面跑的是舊版——而伺服器、curl 看到的都是
   新的，怎麼查都像是「改了沒效」。boo-king-king 2026-09-02 在這上面繞了很久。
 
-這支不會被部署（見 .assetsignore）。
+GitHub Pages 會把 repo 裡的每個檔案都放上網，包含這一支。裡面沒有機密，只是線上
+用不到。
 """
 
 from __future__ import annotations

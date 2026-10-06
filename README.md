@@ -43,5 +43,19 @@ python3 dev_server.py
 
 ## 部署
 
-`index.html` 填好 `__GROUP_JUDGE_API_HOST__` 與 `__GOOGLE_CLIENT_ID__`，然後
-`npx wrangler deploy`。不會被部署的檔案列在 `.assetsignore`。
+GitHub Pages，從 `main` 分支的根目錄發佈（repo 的 Settings → Pages → Deploy from a
+branch）。push 到 `main` 之後大約一分鐘生效，網址是
+https://beethoreven.github.io/group-judge-web/ 。
+
+- `index.html` 裡要填好 `__GROUP_JUDGE_API_HOST__`（後端網址）與 `__GOOGLE_CLIENT_ID__`。
+- 站在 `/group-judge-web/` 這個子路徑底下，所以**所有路徑都要寫相對的**
+  （`css/base.css`，不是 `/css/base.css`）。寫成絕對路徑在本機看不出問題，上線才會
+  404。
+- 這個站的「來源」是 `https://beethoreven.github.io`，**不含後面的路徑**。後端的
+  `ALLOWED_ORIGINS` 與 Google 登入的授權來源填的都是這一串。
+- 同一個 GitHub 帳號底下所有 github.io 的站共用這個來源，瀏覽器裡的登入憑證
+  （localStorage）彼此讀得到。
+- GitHub 會讓瀏覽器把檔案快取十分鐘。剛部署完看到的還是舊版，強制重新整理就好。
+- `.nojekyll` 是告訴 GitHub「這些是現成的靜態檔，不要用 Jekyll 處理」，不能刪。
+- repo 裡的每個檔案都會被公開（免費方案的 Pages 也要求 repo 是公開的），不要放任何
+  不能給人看的東西。
