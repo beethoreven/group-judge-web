@@ -1,0 +1,191 @@
+/**
+ * 行動版｜成員頁籤：一個人一張卡片，點下去開一個面板改身分、狀態與 email。
+ *
+ * 桌面版是直接在表格裡改、改一項送一項；手機上下拉選單與輸入框擠在卡片裡
+ * 很難按，所以集中到面板裡，按「儲存」一次送出。
+ */
+
+import { asyncButton, badge, clear, el, emptyState, loadFailed, openModal, spinner, toast, toastError } from '../ui.js';
+import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
+import { ADMIN, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, filterMembers, lastSpoke, loadMembers, pruneOldRecords } from '../logic/members.js';
+
+export function createMembersView({ me }) {
+  const node = el('div', { class: 'mview' });
+  const filter = { keyword: '', status: '' };
+  let data = null;
+  let generation = 0;
+  const pruneButton = asyncButton('清除半年以前的紀錄', async () => {
+    try {
+      await pruneOldRecords();
+    } catch (err) {
+      toastError(err, '清除失敗');
+    }
+  }, { class: 'btn btn--ghost prune' });
+
+  async function load({ force = false } = {}) {
+    const mine = ++generation;
+    if (!data) clear(node).append(spinner());
+    try {
+      const fresh = await loadMembers({ force });
+      if (mine !== generation) return; // 有更新的一次載入在路上了
+      data = fresh;
+      render();
+    } catch (err) {
+      if (mine !== generation) return;
+      data = null;
+      clear(node).append(loadFailed(err.message, () => load({ force: true })));
+    }
+  }
+
+  const listSlot = el('div', {});
+
+  function render() {
+    const search = el('input', {
+      class: 'field', type: 'search', placeholder: '搜尋名稱或 email', 'aria-label': '搜尋名稱或 email',
+      value: filter.keyword,
+      onInput: (event) => {
+        filter.keyword = event.target.value;
+        renderList();
+      },
+    });
+    const status = el('select', {
+      class: 'field', 'aria-label': '依狀態篩選',
+      onChange: (event) => {
+        filter.status = event.target.value;
+        renderList();
+      },
+    }, [
+      el('option', { value: '' }, '全部'),
+      ...Object.entries(STATUS_LABEL).map(([value, label]) =>
+        el('option', { value, selected: filter.status === value }, label)),
+    ]);
+
+    clear(node).append(
+      el('div', { class: 'mview__head' }, [el('h1', {}, '成員')]),
+      overview(data.overview),
+      el('div', { class: 'mfilters' }, [search, status]),
+      listSlot,
+      pruneButton,
+    );
+    renderList();
+  }
+
+  function overview(o) {
+    const unseen = o.group.count !== null ? Math.max(0, o.group.count - o.known_joined) : null;
+    return el('div', { class: 'mtiles' }, [
+      el('div', { class: 'mtile' }, [
+        el('strong', {}, String(o.known_joined)),
+        el('span', {}, '小判官認得'),
+      ]),
+      el('div', { class: 'mtile' }, [
+        el('strong', {}, o.group.count !== null ? String(o.group.count) : '—'),
+        el('span', {}, '群組實際人數'),
+      ]),
+      el('div', { class: 'mtile' }, [
+        el('strong', {}, String(o.unknown.total)),
+        el('span', {}, '認不出發話者'),
+      ]),
+      el('details', { class: 'mfold mtiles__note' }, [
+        el('summary', {}, '這三個數字是什麼'),
+        el('p', {}, '小判官認得：狀態是「在群組」的人數。'),
+        el('p', {}, o.group.count !== null
+          ? `群組實際人數：${fmtDateTime(o.group.checked_at)} 按「讀取成員資料」時問到的。` +
+            (unseen ? `還有 ${unseen} 人小判官沒看過（他們還沒說過話）。` : '每個人小判官都認得。')
+          : (o.group.bound ? '群組實際人數：按上面的「讀取成員資料」才會更新。' : '群組實際人數：小判官還沒有進任何群組。')),
+        el('p', {}, '認不出發話者：這次統計區間裡，LINE 沒告訴小判官是誰發的訊息則數（官方說只有手機版會附）。' +
+          (o.unknown.open ? `其中 ${o.unknown.open} 則還沒指認，可以到「未知」頁籤處理。` : '')),
+      ]),
+    ]);
+  }
+
+  function renderList() {
+    const shown = filterMembers(data.members, filter);
+    if (!data.members.length) {
+      clear(listSlot).append(emptyState('小判官還沒看過任何人。把它加進群組之後，有人說話或加入就會出現在這裡。'));
+      return;
+    }
+    if (!shown.length) {
+      clear(listSlot).append(emptyState('沒有符合條件的成員。'));
+      return;
+    }
+    clear(listSlot).append(el('div', { class: 'mcards' }, shown.map(card)));
+  }
+
+  function card(member) {
+    return el('button', {
+      class: `mcard${member.status === 'leaved' ? ' is-dim' : ''}`, type: 'button',
+      onClick: () => edit(member),
+    }, [
+      el('span', { class: 'mcard__top' }, [
+        el('span', { class: 'mcard__name' }, member.name || '（沒有名字）'),
+        badge(STATUS_LABEL[member.status], STATUS_TONE[member.status]),
+        member.role === ADMIN && badge('管理員', 'ink'),
+        member.id === me && badge('你', 'neutral'),
+      ]),
+      el('span', { class: 'mcard__meta' }, [
+        member.join_at ? `${fmtDate(member.join_at)} 加入` : '加入時間不明',
+        member.last_speak && (member.join_at && member.last_speak === member.join_at
+          ? `・還沒說過話（${fmtDays(member.silent_days)}）`
+          : `・最後發話 ${lastSpoke(member, fmtDate)}（${fmtDays(member.silent_days)}）`),
+      ].filter(Boolean).join('')),
+      member.email && el('span', { class: 'mcard__meta' }, member.email),
+    ]);
+  }
+
+  /** 編輯一個成員的面板。 */
+  function edit(member) {
+    const mine = member.id === me;
+    const name = member.name || '（沒有名字）';
+    openModal((close) => {
+      const status = el('select', { class: 'field', id: 'm-status' },
+        Object.entries(STATUS_LABEL).map(([value, label]) =>
+          el('option', { value, selected: member.status === value }, label)));
+      const role = el('select', { class: 'field', id: 'm-role', disabled: mine },
+        Object.entries(ROLE_LABEL).map(([value, label]) =>
+          el('option', { value, selected: String(member.role) === value }, label)));
+      const email = el('input', {
+        class: 'field', id: 'm-email', type: 'email', value: member.email ?? '', disabled: mine,
+        inputmode: 'email', autocapitalize: 'off', placeholder: '管理員要填才登得進後台',
+      });
+
+      const save = asyncButton('儲存', async () => {
+        // 只送有改的欄位。
+        const changes = {};
+        if (status.value !== member.status) changes.status = status.value;
+        if (Number(role.value) !== member.role) changes.role = Number(role.value);
+        if (email.value.trim() !== (member.email ?? '')) changes.email = email.value.trim();
+        if (!Object.keys(changes).length) {
+          close();
+          return;
+        }
+        try {
+          const updated = await changeMember(member, changes);
+          if (!updated) return; // 在確認框按了取消：留在面板裡
+          data = { ...data, members: data.members.map((m) => (m.id === updated.id ? updated : m)) };
+          close();
+          toast(`已更新「${name}」`);
+          renderList();
+        } catch (err) {
+          toastError(err, '修改失敗');
+        }
+      }, { class: 'btn btn--primary' });
+
+      return el('div', {}, [
+        el('div', { class: 'modal__body mform' }, [
+          el('label', { for: 'm-status' }, '狀態'), status,
+          el('label', { for: 'm-role' }, '身分'), role,
+          el('label', { for: 'm-email' }, '登入後台用的 Google 帳號'), email,
+          mine && el('p', { class: 'muted' }, '不能改自己的身分與 email。'),
+          !member.has_line_id && el('p', { class: 'muted' }, '這是手動建立的資料，沒有 LINE 帳號，小判官沒辦法記錄他的發話。'),
+        ]),
+        el('div', { class: 'modal__actions' }, [
+          el('button', { class: 'btn btn--ghost', type: 'button', onClick: () => close() }, '取消'),
+          save,
+        ]),
+      ]);
+    }, { title: name });
+  }
+
+  load();
+  return { node, reload: () => load({ force: true }) };
+}

@@ -1,0 +1,297 @@
+/*
+ * 行動版的版面。只有 js/main.js 判斷是行動裝置時才會載入這一份。
+ *
+ * 共用的顏色、按鈕、對話框內容在 base.css；桌面版的對應檔案是 desktop.css。
+ *
+ * 幾個貫穿整份的原則：
+ *   - 可以按的東西至少 44px 高。
+ *   - 輸入框的字至少 16px——小於這個數字，iOS 會在點進去的時候自動放大整個畫面。
+ *   - 頁籤與主要操作放在螢幕底部，並且避開瀏海與底部橫條（safe-area）。
+ */
+
+body { font-size: 16px; }
+
+.btn { min-height: 44px; }
+.btn--small { min-height: 36px; padding: 0 12px; font-size: 14px; }
+.field { min-height: 44px; font-size: 16px; }
+
+/* ── 上面那一條 ───────────────────────────────────────── */
+
+.mbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: calc(8px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 8px max(14px, env(safe-area-inset-left));
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.mbar__brand { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; white-space: nowrap; }
+.mbar__tools { display: flex; align-items: center; gap: 2px; }
+.mbar__menu { width: 40px; padding: 0; font-size: 20px; line-height: 1; }
+
+/* ── 內容 ─────────────────────────────────────────────── */
+
+.mpage {
+  padding: 16px max(14px, env(safe-area-inset-right)) 24px max(14px, env(safe-area-inset-left));
+  /* 底下留出頁籤列的高度；有操作列的頁籤再多留一截（見 .has-actions）。 */
+  padding-bottom: calc(76px + env(safe-area-inset-bottom));
+}
+.mroot.has-actions .mpage { padding-bottom: calc(140px + env(safe-area-inset-bottom)); }
+
+.mview { display: grid; gap: 14px; }
+.mview__head h1 { margin: 0 0 2px; font-size: 21px; line-height: 1.3; }
+.mview__head p { color: var(--ink-soft); font-size: 14px; }
+
+/* ── 底部：操作列 + 頁籤列 ────────────────────────────── */
+
+.mfoot {
+  position: fixed;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -4px 16px rgba(29, 36, 51, .06);
+}
+.mactions:empty { display: none; }
+.mactions { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.mactions__row { display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 8px; }
+.mactions__row .btn { padding: 0 6px; }
+
+.mtabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+.mtabs__tab {
+  position: relative;
+  min-height: 52px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.mtabs__tab.is-active { color: var(--ink); font-weight: 700; }
+.mtabs__tab.is-active::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--seal);
+}
+
+/* toast 要浮在底部那一塊的上面 */
+.toast-layer { bottom: calc(72px + env(safe-area-inset-bottom)); }
+.mroot.has-actions ~ .toast-layer { bottom: calc(136px + env(safe-area-inset-bottom)); }
+
+/* ── 待移除名單：摘要與卡片 ───────────────────────────── */
+
+.mstatus {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.mstatus__counts { display: flex; gap: 18px; color: var(--ink-soft); }
+.mstatus__counts strong { color: var(--ink); font-size: 19px; }
+.mstatus .badge { white-space: normal; text-align: left; border-radius: 10px; }
+
+.pcards { display: grid; gap: 8px; }
+.pcard {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 14px 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.pcard__check {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--line-strong);
+  border-radius: 7px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+.pcard__main { display: grid; gap: 2px; min-width: 0; }
+.pcard__name { font-weight: 700; overflow-wrap: anywhere; }
+.pcard__meta { color: var(--muted); font-size: 13px; }
+.pcard__notes { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.pcard__days { display: grid; justify-items: end; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.pcard__days strong { color: var(--ink); font-size: 20px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+
+.pcard.is-selected { border-color: var(--primary); background: #e9eef8; box-shadow: inset 0 0 0 1px var(--primary); }
+.pcard.is-selected .pcard__check { border-color: var(--primary); background: var(--primary); color: #fff; }
+
+/* 被「移除」標記的卡片：反白 */
+.pcard.is-spare { border-color: var(--ink); background: var(--ink); color: #fff; }
+.pcard.is-spare .pcard__meta, .pcard.is-spare .pcard__days { color: #aab1c0; }
+.pcard.is-spare .pcard__days strong { color: #fff; }
+.pcard.is-spare .pcard__check { border-color: #5b6479; }
+.pcard.is-spare .badge--ink { background: #fff; color: var(--ink); }
+.pcard.is-spare.is-selected { background: #34405c; border-color: #9fb4e6; box-shadow: inset 0 0 0 1px #9fb4e6; }
+.pcard.is-spare.is-selected .pcard__check { border-color: #9fb4e6; background: #9fb4e6; color: var(--ink); }
+
+/* ── 摺疊區 ───────────────────────────────────────────── */
+
+.mfold {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0 14px;
+  font-size: 14px;
+}
+.mfold summary { padding: 12px 0; font-weight: 500; cursor: pointer; }
+.mfold[open] { padding-bottom: 12px; }
+.mfold p { margin-bottom: 8px; }
+
+.mlist { margin: 0; padding: 0; list-style: none; }
+.mlist li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.mlist__name { font-weight: 500; overflow-wrap: anywhere; }
+
+.mvars { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; margin: 0; }
+.mvars dd { margin: 0; color: var(--ink-soft); }
+.mvars code {
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface-sunk);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+}
+
+/* ── 訊息頁籤 ─────────────────────────────────────────── */
+
+.mgroup { display: grid; gap: 8px; margin-top: 6px; }
+.mgroup__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.mgroup__head h2 { margin: 0; font-size: 17px; }
+.mgroup__trigger { margin: 0; font-size: 13px; }
+
+/* 可編輯的文字：手機上按鈕換到內容下面，整排一樣寬，比較好按。 */
+.etext { display: grid; }
+.etext__head { padding: 10px 14px; }
+.etext__body { padding: 12px 14px; }
+.etext.is-editing .etext__head { flex-wrap: wrap; }
+.etext.is-editing .etext__actions { order: 3; }
+.etext__input { font-size: 16px; min-height: 160px; }
+
+/* ── 成員頁籤 ─────────────────────────────────────────── */
+
+.mtiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mtile {
+  display: grid;
+  gap: 2px;
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: center;
+}
+.mtile strong { font-size: 22px; line-height: 1.2; }
+.mtile span { color: var(--muted); font-size: 12px; }
+.mtiles__note { grid-column: 1 / -1; }
+
+.mfilters { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+
+.mcards { display: grid; gap: 8px; }
+.mcard {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mcard:active { background: var(--surface-sunk); }
+.mcard.is-dim .mcard__name { color: var(--muted); }
+.mcard__top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.mcard__name { margin-right: 2px; font-weight: 700; overflow-wrap: anywhere; }
+.mcard__meta { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+
+/* ── 發話對照 ─────────────────────────────────────────── */
+
+.mroster {
+  margin: 0;
+  padding: 0 14px;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.mroster li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 46px;
+  padding: 8px 0;
+}
+.mroster li + li { border-top: 1px solid var(--line); }
+.mroster__name { font-weight: 500; overflow-wrap: anywhere; }
+.mroster__meta { display: flex; align-items: center; gap: 8px; flex: none; font-size: 13px; }
+
+/* ── 未知發話 ─────────────────────────────────────────── */
+
+.ucard {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.ucard__time { color: var(--muted); font-size: 13px; }
+.ucard__text { overflow-wrap: anywhere; }
+.ucard__who { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+.mform { display: grid; gap: 6px; }
+.mform label { margin-top: 8px; color: var(--ink-soft); font-size: 14px; font-weight: 500; }
+.mform label:first-child { margin-top: 0; }
+
+/* ── 對話框：從底部滑上來 ─────────────────────────────── */
+
+.modal-layer { align-items: flex-end; }
+.modal {
+  width: 100%;
+  max-height: 88dvh;
+  border-radius: 18px 18px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: sheet-in .2s ease-out;
+}
+.modal--wide { height: 88dvh; }
+@keyframes sheet-in { from { transform: translateY(24px); opacity: 0; } }
+.modal__title { padding-top: 20px; }
+.modal__actions { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+.modal > div:last-child { flex: 1; }
+.modal--wide .modal__body { flex: 1; }
+
+.mpicker { display: grid; grid-template-rows: auto 1fr; gap: 10px; align-content: start; }
+.mpicker .pcards { align-content: start; }
+
+.msheet__who { margin-bottom: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.msheet__who strong { color: var(--ink); }
+.msheet__list { display: grid; gap: 8px; }

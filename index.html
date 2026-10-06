@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>小判官</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
+  <!-- 兩種版面共用的樣式。桌面版／行動版各自的那一份由 js/main.js 判斷裝置後才載入。 -->
+  <link rel="stylesheet" href="css/base.css">
+
+  <script>
+    // 部署時填入。本機開發不必改：在 localhost 開這一頁時，後端預設是
+    // http://localhost:5002（見 js/api.js），也可以用網址參數覆寫：
+    //   ?apiBase=http://localhost:5002&googleClientId=xxx
+    window.__GROUP_JUDGE_API_HOST__ = '';
+    window.__GOOGLE_CLIENT_ID__ = '';
+  </script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
