@@ -10,7 +10,7 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, openModal, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, databaseNote, filterMembers, lastSpoke, loadMembers, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
+import { ADMIN, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, databaseNote, filterMembers, lastSpoke, leftBriefly, loadMembers, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 export function createMembersView() {
   const node = el('div', { class: 'mview' });
@@ -142,6 +142,7 @@ export function createMembersView() {
           : `・最後發話 ${lastSpoke(member, fmtDate)}（${fmtDays(member.silent_days)}）`),
       ].filter(Boolean).join('')),
       member.email && el('span', { class: 'mcard__meta' }, member.email),
+      leftBriefly(member, fmtDate) && el('span', { class: 'mcard__meta' }, leftBriefly(member, fmtDate)),
     ]);
   }
 

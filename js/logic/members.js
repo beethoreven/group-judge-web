@@ -189,6 +189,19 @@ export async function pruneOldRecords() {
 }
 
 /**
+ * 「離開過又回來」的註記，沒這回事就回 null。
+ *
+ * 離開不到 30 天又回來的人，後端視為沒離開過，加入時間不重設——所以會出現
+ * 「加入時間很早，卻最近才看到他加入」的情況，這裡把原因標出來。看得出來的
+ * 依據是：上次離開的時間比加入時間還晚（或根本沒有加入時間）。
+ */
+export function leftBriefly(member, fmtDate) {
+  if (!member.last_leave || member.status === 'leaved') return null;
+  if (member.join_at && member.last_leave <= member.join_at) return null;
+  return `${fmtDate(member.last_leave)} 離開過，30 天內又回來，加入時間不重設`;
+}
+
+/**
  * 這個人最後一次發話是哪一天。
  *
  * ★ 加入之後還沒說過話的人，後端記的「沉默起點」就是加入時間——那不是一次

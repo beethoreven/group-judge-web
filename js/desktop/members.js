@@ -9,7 +9,7 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, ROLE_LABEL, STATUS_LABEL, changeMember, databaseNote, filterMembers, lastSpoke, loadMembers, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
+import { ADMIN, ROLE_LABEL, STATUS_LABEL, changeMember, databaseNote, filterMembers, lastSpoke, leftBriefly, loadMembers, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 export function createMembersView() {
   const node = el('div', { class: 'view' });
@@ -204,9 +204,12 @@ export function createMembersView() {
       el('td', {}, status),
       el('td', {}, role),
       el('td', { class: 'table__email' }, email),
-      el('td', { class: 'nowrap' }, member.join_at ? fmtDate(member.join_at) : el('span', {
-        class: 'muted', title: '小判官沒看到他加入（多半是它進群之前就在的人）',
-      }, '—')),
+      el('td', { class: 'nowrap' }, [
+        member.join_at ? fmtDate(member.join_at) : el('span', {
+          class: 'muted', title: '小判官沒看到他加入（多半是它進群之前就在的人）',
+        }, '—'),
+        leftBriefly(member, fmtDate) && badge('離開過', 'neutral', leftBriefly(member, fmtDate)),
+      ]),
       el('td', { class: 'nowrap' }, lastSpoke(member, fmtDate)),
       el('td', { class: 'table__num nowrap' }, fmtDays(member.silent_days)),
     ]);
