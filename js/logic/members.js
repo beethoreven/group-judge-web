@@ -18,7 +18,10 @@ export const ADMIN = 1;
 let cache = null;
 let generation = 0;
 
-/** { members, overview, me }。force 是 true 就不用留著的那一份。 */
+/**
+ * { members, overview, me }。force 是 true 就不用留著的那一份。
+ * me 是登入的人在名單裡的那一筆的 id；還沒有對應的一筆時是 null。
+ */
 export async function loadMembers({ force = false } = {}) {
   if (cache && !force) return cache;
   const mine = ++generation;
@@ -31,6 +34,27 @@ export async function loadMembers({ force = false } = {}) {
 export function forgetMembers() {
   generation += 1;
   cache = null;
+}
+
+/**
+ * 登入的人在成員名單裡還沒有對應的那一筆（後端回的 me 是 null）時，要給他看的提示。
+ * 沒這回事就回 null。
+ *
+ * 只有「第一位管理員」會遇到：他是靠後端設定的 email 進來的，不是靠成員資料。
+ * 這時小判官在 LINE 上還不認得他是管理員——那要看他在群組裡那一筆的身分。
+ */
+export function notLinkedNotice(data) {
+  if (data.me !== null) return null;
+  return el('div', { class: 'notice' }, [
+    el('strong', {}, '名單裡還沒有對應到你的那一筆。'),
+    '你是用「第一位管理員」的 Google 帳號登入的。先在群組裡說一句話，再回到這裡找到你自己，',
+    '把身分改成「管理員」——小判官才會聽你在 LINE 上下的指令。email 也填上你登入用的這個帳號，後台就認得哪一筆是你。',
+  ]);
+}
+
+/** 統計區間結束之後到現在，又收到幾則認不出發話者的訊息——接在說明後面的那一句。 */
+export function unknownNote(later) {
+  return later ? `統計區間之後到現在另有 ${later} 則。` : '統計區間之後到現在沒有。';
 }
 
 /**

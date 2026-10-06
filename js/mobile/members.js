@@ -3,13 +3,16 @@
  *
  * 桌面版是直接在表格裡改、改一項送一項；手機上下拉選單與輸入框擠在卡片裡
  * 很難按，所以集中到面板裡，按「儲存」一次送出。
+ *
+ * 「哪一筆是我」用的是這次載入時後端回的 data.me，不是登入當下的答案——
+ * 它可能是 null（見 js/logic/members.js 的 notLinkedNotice）。
  */
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, openModal, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, filterMembers, lastSpoke, loadMembers, pruneOldRecords } from '../logic/members.js';
+import { ADMIN, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, filterMembers, lastSpoke, loadMembers, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
-export function createMembersView({ me }) {
+export function createMembersView() {
   const node = el('div', { class: 'mview' });
   const filter = { keyword: '', status: '' };
   let data = null;
@@ -61,11 +64,14 @@ export function createMembersView({ me }) {
     ]);
 
     clear(node).append(
-      el('div', { class: 'mview__head' }, [el('h1', {}, '成員')]),
-      overview(data.overview),
-      el('div', { class: 'mfilters' }, [search, status]),
-      listSlot,
-      pruneButton,
+      ...[
+        el('div', { class: 'mview__head' }, [el('h1', {}, '成員')]),
+        notLinkedNotice(data),
+        overview(data.overview),
+        el('div', { class: 'mfilters' }, [search, status]),
+        listSlot,
+        pruneButton,
+      ].filter(Boolean),
     );
     renderList();
   }
@@ -92,8 +98,9 @@ export function createMembersView({ me }) {
           ? `群組實際人數：${fmtDateTime(o.group.checked_at)} 按「讀取成員資料」時問到的。` +
             (unseen ? `還有 ${unseen} 人小判官沒看過（他們還沒說過話）。` : '每個人小判官都認得。')
           : (o.group.bound ? '群組實際人數：按上面的「讀取成員資料」才會更新。' : '群組實際人數：小判官還沒有進任何群組。')),
-        el('p', {}, '認不出發話者：這次統計區間裡，LINE 沒告訴小判官是誰發的訊息則數（官方說只有手機版會附）。' +
-          (o.unknown.open ? `其中 ${o.unknown.open} 則還沒指認，可以到「未知」頁籤處理。` : '')),
+        el('p', {}, '認不出發話者：這次統計區間裡，LINE 沒告訴小判官是誰發的訊息則數。' +
+          (o.unknown.open ? `其中 ${o.unknown.open} 則還沒指認，可以到「未知」頁籤處理。` : '') +
+          unknownNote(o.unknown.later)),
       ]),
     ]);
   }
@@ -120,7 +127,7 @@ export function createMembersView({ me }) {
         el('span', { class: 'mcard__name' }, member.name || '（沒有名字）'),
         badge(STATUS_LABEL[member.status], STATUS_TONE[member.status]),
         member.role === ADMIN && badge('管理員', 'ink'),
-        member.id === me && badge('你', 'neutral'),
+        member.id === data.me && badge('你', 'neutral'),
       ]),
       el('span', { class: 'mcard__meta' }, [
         member.join_at ? `${fmtDate(member.join_at)} 加入` : '加入時間不明',
@@ -134,7 +141,7 @@ export function createMembersView({ me }) {
 
   /** 編輯一個成員的面板。 */
   function edit(member) {
-    const mine = member.id === me;
+    const mine = member.id === data.me;
     const name = member.name || '（沒有名字）';
     openModal((close) => {
       const status = el('select', { class: 'field', id: 'm-status' },
@@ -164,6 +171,11 @@ export function createMembersView({ me }) {
           data = { ...data, members: data.members.map((m) => (m.id === updated.id ? updated : m)) };
           close();
           toast(`已更新「${name}」`);
+          if (data.me === null && ('role' in changes || 'email' in changes)) {
+            // 名單裡還沒有自己的人改了身分或 email：可能就是把自己接上了，重新問一次。
+            await load({ force: true });
+            return;
+          }
           renderList();
         } catch (err) {
           toastError(err, '修改失敗');

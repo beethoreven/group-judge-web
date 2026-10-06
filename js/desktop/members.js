@@ -2,13 +2,16 @@
  * 桌面版｜成員頁籤：小判官認得的每一個人，可以改身分、狀態與登入用的 email。
  *
  * 上面一排數字是整體狀況：認得幾個人、群組實際幾個人、有多少訊息認不出是誰發的。
+ *
+ * 「哪一筆是我」用的是這次載入時後端回的 data.me，不是登入當下的答案——
+ * 它可能是 null（見 js/logic/members.js 的 notLinkedNotice）。
  */
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, ROLE_LABEL, STATUS_LABEL, changeMember, filterMembers, lastSpoke, loadMembers, pruneOldRecords } from '../logic/members.js';
+import { ADMIN, ROLE_LABEL, STATUS_LABEL, changeMember, filterMembers, lastSpoke, loadMembers, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
-export function createMembersView({ me }) {
+export function createMembersView() {
   const node = el('div', { class: 'view' });
   const filter = { keyword: '', status: '' };
   let data = null;
@@ -43,6 +46,11 @@ export function createMembersView({ me }) {
       if (updated) {
         data = { ...data, members: data.members.map((m) => (m.id === updated.id ? updated : m)) };
         toast(done);
+        if (data.me === null && ('role' in changes || 'email' in changes)) {
+          // 名單裡還沒有自己的人改了身分或 email：可能就是把自己接上了，重新問一次。
+          await load({ force: true });
+          return;
+        }
       }
     } catch (err) {
       toastError(err, '修改失敗');
@@ -78,9 +86,12 @@ export function createMembersView({ me }) {
         el('h1', {}, '成員'),
         el('p', {}, '小判官看過的每一個人。加入時間與發話時間是它觀察到的，不能手動改；身分、狀態與 email 可以。'),
       ]),
-      overview(data.overview),
-      el('div', { class: 'filters' }, [search, status, pruneButton]),
-      tableSlot,
+      ...[
+        notLinkedNotice(data),
+        overview(data.overview),
+        el('div', { class: 'filters' }, [search, status, pruneButton]),
+        tableSlot,
+      ].filter(Boolean),
     );
     renderTable();
   }
@@ -100,8 +111,9 @@ export function createMembersView({ me }) {
       tile(
         '認不出發話者的訊息',
         `${o.unknown.total} 則`,
-        'LINE 沒告訴小判官是誰發的訊息（官方說只有手機版會附），算的是這次統計區間裡的。' +
-        (o.unknown.open ? `其中 ${o.unknown.open} 則還沒指認，可以到「未知發話」頁籤處理。` : ''),
+        'LINE 沒告訴小判官是誰發的訊息，算的是這次統計區間裡的。' +
+        (o.unknown.open ? `其中 ${o.unknown.open} 則還沒指認，可以到「未知發話」頁籤處理。` : '') +
+        unknownNote(o.unknown.later),
       ),
     ]);
   }
@@ -139,7 +151,7 @@ export function createMembersView({ me }) {
   }
 
   function row(member) {
-    const mine = member.id === me;
+    const mine = member.id === data.me;
     const name = member.name || '（沒有名字）';
 
     const status = el('select', {

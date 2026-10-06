@@ -27,7 +27,7 @@ export function mount(root, { user, brandMark, onLogout, onSwitchDevice }) {
     rules: createRulesView,
     cleanup: createCleanupView,
     messages: createMessagesView,
-    members: () => createMembersView({ me: user.id }),
+    members: createMembersView,
     roster: createRosterView,
     unknown: createUnknownView,
   }, (key, view) => {

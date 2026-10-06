@@ -5,7 +5,7 @@
 
 import { asyncButton, clear, el, emptyState, loadFailed, spinner, toast, toastError } from '../ui.js';
 import { fmtDateTime, fmtPlainDate } from '../format.js';
-import { assign, describe, filterMessages, loadUnknown, pickSpeaker, unassign } from '../logic/unknown.js';
+import { assign, describe, filterMessages, laterNote, loadUnknown, pickSpeaker, unassign } from '../logic/unknown.js';
 
 export function createUnknownView() {
   const node = el('div', { class: 'mview' });
@@ -58,6 +58,7 @@ export function createUnknownView() {
           el('strong', {}, `${fmtPlainDate(data.period.start)} – ${fmtPlainDate(data.period.end)}`),
           ' 裡 LINE 沒說是誰發的訊息。是待移除名單上的人發的就在這裡指認，他會移到白名單。',
         ]),
+        el('p', { class: 'muted' }, laterNote(data)),
       ]),
       el('details', { class: 'mfold' }, [
         el('summary', {}, '為什麼只有時間和開頭幾個字'),

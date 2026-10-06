@@ -20,6 +20,17 @@ export const assign = (messageId, userId) =>
 export const unassign = (messageId) =>
   api.post(`/api/unknown/${encodeURIComponent(messageId)}/unassign`);
 
+/**
+ * 統計區間結束之後到現在的狀況，一句話。這些訊息要到下次整理才會列出來，但數字
+ * 現在就看得到——想知道某一種發話方式（例如電腦版）認不認得出人，發一則之後
+ * 看這個數字有沒有增加就知道了。
+ */
+export function laterNote(data) {
+  return data.later
+    ? `統計區間之後到現在，另外收到 ${data.later} 則認不出發話者的訊息，下次整理時才會列在這裡。`
+    : '統計區間之後到現在，每一則訊息小判官都知道是誰發的。';
+}
+
 const KIND_LABEL = {
   sticker: '貼圖', image: '圖片', video: '影片', audio: '語音', file: '檔案', location: '位置',
 };

@@ -5,7 +5,7 @@
 
 import { asyncButton, clear, el, emptyState, loadFailed, spinner, toast, toastError } from '../ui.js';
 import { fmtDateTime, fmtPlainDate } from '../format.js';
-import { assign, describe, filterMessages, loadUnknown, pickSpeaker, unassign } from '../logic/unknown.js';
+import { assign, describe, filterMessages, laterNote, loadUnknown, pickSpeaker, unassign } from '../logic/unknown.js';
 
 export function createUnknownView() {
   const node = el('div', { class: 'view' });
@@ -60,6 +60,7 @@ export function createUnknownView() {
           ' 裡，LINE 沒有告訴小判官是誰發的訊息。如果是待移除名單上的人發的，在這裡指認，他就算有發話、移到白名單。',
         ]),
         el('p', {}, '除了時間與訊息開頭，LINE 沒有給任何能認人的資料，連哪幾則是同一個人發的都看不出來——要對照群組的聊天紀錄才知道是誰。'),
+        el('p', { class: 'muted' }, laterNote(data)),
       ]),
       data.assignable === null && el('div', { class: 'notice' },
         '這個月還沒儲存待移除名單。請先到「待移除名單」頁籤儲存，才能指認。'),
