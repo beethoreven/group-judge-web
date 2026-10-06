@@ -21,7 +21,7 @@ export function createRulesView() {
       clear(node).append(
         el('div', { class: 'view__head' }, [
           el('h1', {}, '版規'),
-          el('p', {}, '任何人在群組或私訊裡輸入「版規」或「板規」（整則訊息只有這兩個字），小判官就會回下面這段文字。'),
+          el('p', {}, '任何人在群組裡輸入「版規」或「板規」（整則訊息只有這兩個字，不必 tag），小判官就會回下面這段文字。私訊它的話只有管理員會得到版規。'),
         ]),
         editor.node,
       );
