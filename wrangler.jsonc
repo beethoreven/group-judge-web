@@ -7,10 +7,17 @@
   //
   // ★ 沒有 "main" 欄位是刻意的：那是 Worker 程式的進入點，這裡沒有伺服器程式。
   // ★ 這個名字就是網址的第一段：<name>.<帳號子網域>.workers.dev
-  //   改了它會部署出一個**新的** Worker，舊的不會自動消失。改名之後後端的
+  //   帳號子網域是整個 Cloudflare 帳號共用的（這個帳號是 boo-king-king），所以
+  //   網址是 https://group-judge-web.boo-king-king.workers.dev ——跟 boo-king-king
+  //   那個專案沒有關係，只是同一個帳號。
+  //
+  // ★ 要跟 Cloudflare 後台那個專案的名字一樣（後台是用 repo 名稱建的）。兩邊不一樣
+  //   的話，後台的名字會贏，這裡寫的只是擺著好看。
+  //
+  //   改名會部署出一個**新的** Worker，舊的不會自動消失。改名之後後端的
   //   ALLOWED_ORIGINS 與 Google OAuth 的授權來源都要跟著改，否則整站
   //   `Failed to fetch`、或登入壞掉。
-  "name": "group-judge",
+  "name": "group-judge-web",
   "compatibility_date": "2026-10-01",
 
   // 整個 repo 根目錄就是網站內容，index.html 在根目錄。
