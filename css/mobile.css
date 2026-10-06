@@ -210,6 +210,8 @@ body { font-size: 16px; }
 .mtile strong { font-size: 22px; line-height: 1.2; }
 .mtile span { color: var(--muted); font-size: 12px; }
 .mtiles__note { grid-column: 1 / -1; }
+/* 數字底下那一句資料庫用量。平常是小字；進了省電模式改用 .notice。 */
+.musage { margin-top: -6px; color: var(--muted); font-size: 13px; line-height: 1.5; }
 
 .mfilters { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 

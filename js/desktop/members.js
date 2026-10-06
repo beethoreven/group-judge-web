@@ -9,7 +9,7 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, ROLE_LABEL, STATUS_LABEL, changeMember, filterMembers, lastSpoke, loadMembers, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
+import { ADMIN, ROLE_LABEL, STATUS_LABEL, changeMember, databaseNote, filterMembers, lastSpoke, loadMembers, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 export function createMembersView() {
   const node = el('div', { class: 'view' });
@@ -89,6 +89,7 @@ export function createMembersView() {
       ...[
         notLinkedNotice(data),
         overview(data.overview),
+        databaseLine(data.overview.database),
         el('div', { class: 'filters' }, [search, status, pruneButton]),
         tableSlot,
       ].filter(Boolean),
@@ -116,6 +117,11 @@ export function createMembersView() {
         unknownNote(o.unknown.later),
       ),
     ]);
+  }
+
+  function databaseLine(db) {
+    const note = databaseNote(db);
+    return note && el('div', { class: db.saving ? 'notice' : 'usage' }, note);
   }
 
   function tile(label, value, note) {

@@ -10,7 +10,7 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, openModal, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, filterMembers, lastSpoke, loadMembers, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
+import { ADMIN, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, databaseNote, filterMembers, lastSpoke, loadMembers, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 export function createMembersView() {
   const node = el('div', { class: 'mview' });
@@ -68,6 +68,7 @@ export function createMembersView() {
         el('div', { class: 'mview__head' }, [el('h1', {}, '成員')]),
         notLinkedNotice(data),
         overview(data.overview),
+        databaseLine(data.overview.database),
         el('div', { class: 'mfilters' }, [search, status]),
         listSlot,
         pruneButton,
@@ -103,6 +104,11 @@ export function createMembersView() {
           unknownNote(o.unknown.later)),
       ]),
     ]);
+  }
+
+  function databaseLine(db) {
+    const note = databaseNote(db);
+    return note && el('div', { class: db.saving ? 'notice' : 'musage' }, note);
   }
 
   function renderList() {

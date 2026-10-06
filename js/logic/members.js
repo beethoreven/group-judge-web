@@ -52,6 +52,23 @@ export function notLinkedNotice(data) {
   ]);
 }
 
+/**
+ * 資料庫用量那一句：這個月估計醒了多久，以及現在是不是省電模式。
+ *
+ * 免費的資料庫一個月能醒著的時數有上限，用完會停擺到下個月。所以後端自己看著
+ * 用量：平常每一則訊息都立刻寫入，到了門檻就退回省電模式並私訊管理員（後端
+ * db/meter.py）。這裡只負責把狀況講清楚。db.saving 是 true 就是省電模式。
+ */
+export function databaseNote(db) {
+  if (!db) return null;
+  const used = `資料庫這個月估計醒了 ${db.hours} 小時`;
+  if (db.quota_hours === null) return `${used}。每一則訊息都立刻寫入。`;
+  const quota = `${used}（免費額度一個月 ${db.quota_hours} 小時）`;
+  return db.saving
+    ? `${quota}，已經退回省電模式：同一個人當天第三則以後的訊息先記著、晚一點才寫入，下個月自動恢復。誰有沒有發話不受影響。`
+    : `${quota}。每一則訊息都立刻寫入；到 ${db.saving_after_hours} 小時會退回省電模式，並私訊通知管理員。`;
+}
+
 /** 統計區間結束之後到現在，又收到幾則認不出發話者的訊息——接在說明後面的那一句。 */
 export function unknownNote(later) {
   return later ? `統計區間之後到現在另有 ${later} 則。` : '統計區間之後到現在沒有。';

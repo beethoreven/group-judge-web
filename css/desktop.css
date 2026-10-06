@@ -212,6 +212,8 @@
 .tile__label { color: var(--muted); font-size: 13px; }
 .tile__value { font-size: 24px; font-weight: 700; line-height: 1.4; }
 .tile__note { color: var(--muted); font-size: 13px; line-height: 1.5; }
+/* 數字底下那一句資料庫用量。平常是小字；進了省電模式改用 .notice。 */
+.usage { margin-top: -8px; color: var(--muted); font-size: 13px; line-height: 1.5; }
 
 .filters { display: flex; gap: 8px; }
 .filters--wrap { flex-wrap: wrap; align-items: center; }
