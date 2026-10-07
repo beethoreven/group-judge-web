@@ -147,7 +147,7 @@ function pickMergeTarget(member, candidates) {
     const list = el('div', { class: 'choices' });
     const render = (keyword) => {
       const key = keyword.trim().toLowerCase();
-      const shown = candidates.filter((m) => !key || (m.name || '').toLowerCase().includes(key));
+      const shown = candidates.filter((m) => !key || matchesName(m, key));
       if (!shown.length) {
         list.replaceChildren(emptyState(candidates.length ? '找不到符合的人。' : '還沒有任何一筆有 LINE 帳號的成員。'));
         return;
@@ -291,5 +291,18 @@ export function filterMembers(members, { keyword = '', status = '' } = {}) {
   const key = keyword.trim().toLowerCase();
   return members.filter((m) =>
     (!status || m.status === status) &&
-    (!key || (m.name || '').toLowerCase().includes(key) || (m.email || '').toLowerCase().includes(key)));
+    (!key || matchesName(m, key) || (m.email || '').toLowerCase().includes(key)));
+}
+
+/**
+ * 名字有沒有包含這個關鍵字（key 要先轉小寫）。另一個名字也算：LINE 讓人對不同群組
+ * 顯示不同的名字，管理員在群組裡看到的可能是 alt_name 那一個。
+ */
+export function matchesName(member, key) {
+  return (member.name || '').toLowerCase().includes(key) || (member.alt_name || '').toLowerCase().includes(key);
+}
+
+/** 「又名 …」。沒有另一個名字就是 null。 */
+export function akaText(member) {
+  return member.alt_name ? `又名 ${member.alt_name}` : null;
 }

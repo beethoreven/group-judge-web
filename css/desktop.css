@@ -140,6 +140,8 @@
 .table__name { font-weight: 500; overflow-wrap: anywhere; }
 .table__name .badge { margin-left: 8px; }
 .table__name .btn { margin-left: 6px; }
+/* 「又名 …」：另一個名字，放在名字底下一行小字。 */
+.table__aka { display: block; margin-top: 2px; color: var(--muted); font-size: 12.5px; font-weight: 400; }
 /* 有標題的勾選欄（成員頁的「不列入整理」）。.table td 預設靠左，所以要寫得比它具體。 */
 .table .table__flag { text-align: center; }
 .table__flag input { width: 16px; height: 16px; vertical-align: middle; cursor: pointer; }
