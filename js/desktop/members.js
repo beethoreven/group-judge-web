@@ -9,7 +9,7 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, ROLE_LABEL, STATUS_LABEL, changeMember, databaseNote, filterMembers, lastSpoke, leftBriefly, loadMembers, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
+import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, changeMember, databaseNote, filterMembers, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 export function createMembersView() {
   const node = el('div', { class: 'view' });
@@ -151,6 +151,7 @@ export function createMembersView() {
         el('th', {}, '加入群組'),
         el('th', {}, '最後發話'),
         el('th', { class: 'table__num' }, '未發話'),
+        el('th', { class: 'table__flag', title: '勾起來的人，系統不會把他算進待移除名單（榮譽席）' }, '不列入整理'),
       ])),
       el('tbody', {}, shown.map(row)),
     ])));
@@ -195,11 +196,25 @@ export function createMembersView() {
       },
     });
 
+    const exempt = el('input', {
+      type: 'checkbox', checked: member.exempt, 'aria-label': `${name} 不列入整理`,
+      onChange: (event) => apply(member, { exempt: event.target.checked },
+        event.target.checked ? `「${name}」不列入整理` : `「${name}」恢復列入整理`),
+    });
+    const merge = !member.has_line_id && asyncButton('合併…', async () => {
+      try {
+        if (await mergeMember(member, data.members)) await load({ force: true });
+      } catch (err) {
+        toastError(err, '合併失敗');
+      }
+    }, { class: 'btn btn--small btn--ghost', title: '這一筆跟另一筆其實是同一個人：併進有 LINE 帳號的那一筆' });
+
     return el('tr', { class: member.status === 'leaved' ? 'is-dim' : '' }, [
       el('td', { class: 'table__name' }, [
         name,
         mine && badge('你', 'ink'),
-        !member.has_line_id && badge('沒有 LINE 帳號', 'neutral', '手動建立的資料，小判官沒辦法記錄他的發話'),
+        !member.has_line_id && badge('沒有 LINE 帳號', 'neutral', NO_LINE_HINT),
+        merge,
       ]),
       el('td', {}, status),
       el('td', {}, role),
@@ -212,6 +227,7 @@ export function createMembersView() {
       ]),
       el('td', { class: 'nowrap' }, lastSpoke(member, fmtDate)),
       el('td', { class: 'table__num nowrap' }, fmtDays(member.silent_days)),
+      el('td', { class: 'table__flag' }, exempt),
     ]);
   }
 

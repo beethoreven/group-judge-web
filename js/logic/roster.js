@@ -23,6 +23,7 @@ export const loadRoster = () => api.get('/api/roster');
 export const GROUPS = {
   spoke: { label: '有發話', tone: 'ok' },
   new: { label: '區間內加入', tone: 'neutral' },
+  exempt: { label: '不列入整理', tone: 'neutral' },
   silent: { label: '沒發話', tone: 'danger' },
 };
 
@@ -97,7 +98,7 @@ export function countsText(months, counts) {
 
 /** 各群組幾個人。 */
 export function tally(members) {
-  const out = { spoke: 0, new: 0, silent: 0 };
+  const out = { spoke: 0, new: 0, exempt: 0, silent: 0 };
   for (const m of members) out[m.group] += 1;
   return out;
 }

@@ -210,6 +210,9 @@ body { font-size: 16px; }
 .mtile strong { font-size: 22px; line-height: 1.2; }
 .mtile span { color: var(--muted); font-size: 12px; }
 .mtiles__note { grid-column: 1 / -1; }
+/* 一整列都可以點，高度留到手指按得準的 44px。 */
+.mcheck { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.mcheck input { width: 18px; height: 18px; flex: none; }
 /* 數字底下那一句資料庫用量。平常是小字；進了省電模式改用 .notice。 */
 .musage { margin-top: -6px; color: var(--muted); font-size: 13px; line-height: 1.5; }
 

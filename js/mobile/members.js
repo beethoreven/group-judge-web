@@ -10,7 +10,7 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, openModal, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, databaseNote, filterMembers, lastSpoke, leftBriefly, loadMembers, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
+import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, databaseNote, filterMembers, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 export function createMembersView() {
   const node = el('div', { class: 'mview' });
@@ -133,6 +133,8 @@ export function createMembersView() {
         el('span', { class: 'mcard__name' }, member.name || '（沒有名字）'),
         badge(STATUS_LABEL[member.status], STATUS_TONE[member.status]),
         member.role === ADMIN && badge('管理員', 'ink'),
+        member.exempt && badge('不列入整理', 'ok'),
+        !member.has_line_id && badge('沒有 LINE 帳號', 'neutral'),
         member.id === data.me && badge('你', 'neutral'),
       ]),
       el('span', { class: 'mcard__meta' }, [
@@ -162,12 +164,23 @@ export function createMembersView() {
         inputmode: 'email', autocapitalize: 'off', placeholder: '管理員要填才登得進後台',
       });
 
+      const exempt = el('input', { type: 'checkbox', id: 'm-exempt', checked: member.exempt });
+      const merge = !member.has_line_id && asyncButton('合併到有 LINE 帳號的那一筆…', async () => {
+        try {
+          close();
+          if (await mergeMember(member, data.members)) await load({ force: true });
+        } catch (err) {
+          toastError(err, '合併失敗');
+        }
+      }, { class: 'btn' });
+
       const save = asyncButton('儲存', async () => {
         // 只送有改的欄位。
         const changes = {};
         if (status.value !== member.status) changes.status = status.value;
         if (Number(role.value) !== member.role) changes.role = Number(role.value);
         if (email.value.trim() !== (member.email ?? '')) changes.email = email.value.trim();
+        if (exempt.checked !== member.exempt) changes.exempt = exempt.checked;
         if (!Object.keys(changes).length) {
           close();
           return;
@@ -194,9 +207,11 @@ export function createMembersView() {
           el('label', { for: 'm-status' }, '狀態'), status,
           el('label', { for: 'm-role' }, '身分'), role,
           el('label', { for: 'm-email' }, '登入後台用的 Google 帳號'), email,
+          el('label', { class: 'mcheck', for: 'm-exempt' }, [exempt, '不列入整理（榮譽席，系統不會把他算進名單）']),
           mine && el('p', { class: 'muted' }, '不能改自己的身分與 email。'),
-          !member.has_line_id && el('p', { class: 'muted' }, '這是手動建立的資料，沒有 LINE 帳號，小判官沒辦法記錄他的發話。'),
-        ]),
+          !member.has_line_id && el('p', { class: 'muted' }, NO_LINE_HINT),
+          merge,
+        ].filter(Boolean)),
         el('div', { class: 'modal__actions' }, [
           el('button', { class: 'btn btn--ghost', type: 'button', onClick: () => close() }, '取消'),
           save,

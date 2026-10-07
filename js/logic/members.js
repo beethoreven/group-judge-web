@@ -6,7 +6,7 @@
  */
 
 import { api } from '../api.js';
-import { confirmDialog, el, openModal, toast } from '../ui.js';
+import { confirmDialog, el, emptyState, openModal, toast } from '../ui.js';
 
 export const STATUS_LABEL = { joined: '在群組', leaved: '已離開', banned: '黑名單' };
 export const STATUS_TONE = { joined: 'ok', leaved: 'neutral', banned: 'danger' };
@@ -75,7 +75,9 @@ export function unknownNote(later) {
 }
 
 /**
- * 改一個成員。changes 是 { role?, status?, email? }。
+ * 改一個成員。changes 是 { role?, status?, email?, exempt? }。
+ * exempt 是「不列入整理」：系統不會把他算進待移除名單（榮譽席）。這個月的名單
+ * 已經存了、而他在上面的話，後端會一併把他拿掉——這裡負責告訴管理員。
  * 會讓人後悔的改動先問一次；使用者按否就回傳 null，什麼都沒改。
  */
 export async function changeMember(member, changes) {
@@ -98,11 +100,82 @@ export async function changeMember(member, changes) {
     });
     if (!ok) return null;
   }
-  const updated = await api.put(`/api/members/${member.id}`, changes);
+  const { dropped_from_list: dropped, ...updated } = await api.put(`/api/members/${member.id}`, changes);
   if (cache) {
     cache = { ...cache, members: cache.members.map((m) => (m.id === updated.id ? updated : m)) };
   }
+  if (dropped) toast(`「${updated.name || '（沒有名字）'}」原本在這個月存好的移除名單上，已經一併拿掉`);
   return updated;
+}
+
+/** 沒有 LINE 帳號的那幾筆是怎麼回事——兩種版面的標記共用這一句。 */
+export const NO_LINE_HINT =
+  '匯入或手動建立的資料，還沒對應到 LINE 帳號。他第一次說話時，小判官會用名字自動接上；名字對不上（例如改過名字）的話會多出一筆，用「合併」把兩筆併成一筆。';
+
+/**
+ * 把一筆沒有 LINE 帳號的資料，併進同一個人有 LINE 帳號的那一筆。
+ *
+ * 流程：先挑要併進哪一筆，再確認一次（併了就拆不回來），然後請後端合併。
+ * 回傳 true 代表併好了、名單該重新載入；取消就是 false。
+ * 併的規則在後端（db/members.py 的 merge），確認框裡講的是結果。
+ */
+export async function mergeMember(member, members) {
+  const target = await pickMergeTarget(member, members.filter((m) => m.has_line_id && m.id !== member.id));
+  if (!target) return false;
+  const from = member.name || '（沒有名字）';
+  const into = target.name || '（沒有名字）';
+  const ok = await confirmDialog({
+    title: `把「${from}」併進「${into}」？`,
+    body: `合併之後只會留下「${into}」這一筆：加入時間用「${from}」的（如果「${into}」沒有），每個月的發話則數加在一起，白名單與歷次名單上的紀錄也會改掛過去。「${from}」這一筆會消失，沒辦法復原。`,
+    confirmText: '合併',
+    cancelText: '取消',
+    danger: true,
+  });
+  if (!ok) return false;
+  await api.post(`/api/members/${member.id}/merge`, { into: target.id });
+  forgetMembers();
+  toast(`已把「${from}」併進「${into}」`);
+  return true;
+}
+
+/** 挑人的清單一次最多列幾位。群組有幾百人，全部畫出來沒有人會往下找，用搜尋比較快。 */
+const MERGE_CHOICES = 60;
+
+/** 挑要併進哪一筆：只列有 LINE 帳號的成員。回傳 Promise<成員 | null>。 */
+function pickMergeTarget(member, candidates) {
+  const { done } = openModal((close) => {
+    const list = el('div', { class: 'choices' });
+    const render = (keyword) => {
+      const key = keyword.trim().toLowerCase();
+      const shown = candidates.filter((m) => !key || (m.name || '').toLowerCase().includes(key));
+      if (!shown.length) {
+        list.replaceChildren(emptyState(candidates.length ? '找不到符合的人。' : '還沒有任何一筆有 LINE 帳號的成員。'));
+        return;
+      }
+      const items = shown.slice(0, MERGE_CHOICES).map((m) => el('button', { class: 'choices__item', type: 'button', onClick: () => close(m) }, [
+        el('span', { class: 'choices__name' }, m.name || '（沒有名字）'),
+        el('span', { class: 'muted' }, STATUS_LABEL[m.status]),
+      ]));
+      if (shown.length > MERGE_CHOICES) {
+        items.push(el('p', { class: 'muted' }, `還有 ${shown.length - MERGE_CHOICES} 位沒列出來，用上面的搜尋找。`));
+      }
+      list.replaceChildren(...items);
+    };
+    render('');
+    return el('div', {}, [
+      el('div', { class: 'modal__body' }, [
+        el('p', {}, `「${member.name || '（沒有名字）'}」其實是下面的哪一位？選他現在在 LINE 上的那一筆。`),
+        el('input', {
+          class: 'field', type: 'search', placeholder: '搜尋現在的名字', 'aria-label': '搜尋現在的名字',
+          onInput: (event) => render(event.target.value),
+        }),
+        list,
+      ]),
+      el('div', { class: 'modal__actions' },
+        el('button', { class: 'btn btn--ghost', type: 'button', onClick: () => close(null) }, '取消')),
+    ]);
+  }, { title: '合併成員資料', wide: true });
+  return done.then((picked) => picked ?? null);
 }
 
 /**
