@@ -64,6 +64,16 @@ function loadStylesheet(href) {
   });
 }
 
+/**
+ * 樣式檔的網址帶上版本，檔案一改瀏覽器就會重抓（不然更新之後最多會舊 10 分鐘）。
+ * 版本由 tools/stamp.py 寫在 index.html；沒有就用原本的網址。js 的部分靠 index.html 的
+ * import map，不必在這裡處理。
+ */
+function versioned(path) {
+  const version = window.__ASSET_VERSIONS__?.[path];
+  return version ? `${path}?v=${version}` : path;
+}
+
 async function showApp(user) {
   kickingOut = false;
   const device = detectDevice();
@@ -71,7 +81,7 @@ async function showApp(user) {
   try {
     const [shell] = await Promise.all([
       import(`./${device}/shell.js`),
-      loadStylesheet(`css/${device}.css`),
+      loadStylesheet(versioned(`css/${device}.css`)),
     ]);
     document.documentElement.dataset.device = device;
     unmountShell?.();

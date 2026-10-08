@@ -59,3 +59,16 @@ https://beethoreven.github.io/group-judge-web/ 。
 - `.nojekyll` 是告訴 GitHub「這些是現成的靜態檔，不要用 Jekyll 處理」，不能刪。
 - repo 裡的每個檔案都會被公開（免費方案的 Pages 也要求 repo 是公開的），不要放任何
   不能給人看的東西。
+
+## 改了檔案之後：更新版本號
+
+改了 `js/` 或 `css/` 底下任何檔案，commit 之前執行：
+
+```bash
+python3 tools/stamp.py
+```
+
+它會把每個檔案內容的雜湊寫進 `index.html`（js 用 import map、css 用 `?v=`）。GitHub Pages
+讓瀏覽器把每個檔案快取 10 分鐘，而後台畫面的程式是登入後才動態載入的，連強制重新整理都
+不一定會重抓；網址帶上版本之後，檔案一改網址就不同，管理員重新整理一次就看得到新版。
+沒跑也不會壞，只是又回到「最多舊 10 分鐘」。`python3 tools/stamp.py --check` 可以檢查有沒有漏跑。
