@@ -44,6 +44,9 @@ body { font-size: 16px; }
 
 .mview { display: grid; gap: 14px; }
 .mview__head h1 { margin: 0 0 2px; font-size: 21px; line-height: 1.3; }
+/* 同一頁的第二個主題（版規頁籤的「群組額外規範」）。 */
+.mview__head h2 { margin: 0 0 2px; font-size: 18px; line-height: 1.3; }
+.mview__head--next { margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--line); }
 .mview__head p { color: var(--ink-soft); font-size: 14px; }
 
 /* ── 底部：操作列 + 頁籤列 ────────────────────────────── */
