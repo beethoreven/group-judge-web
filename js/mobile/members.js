@@ -12,6 +12,9 @@ import { asyncButton, badge, clear, el, emptyState, loadFailed, openModal, spinn
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
 import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, akaText, changeMember, databaseNote, filterMembers, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
+/** 已離開、黑名單的卡片各有自己的底色（見 css/mobile.css）。 */
+const CARD_CLASS = { leaved: 'is-left', banned: 'is-banned' };
+
 export function createMembersView() {
   const node = el('div', { class: 'mview' });
   const filter = { keyword: '', status: '' };
@@ -126,7 +129,7 @@ export function createMembersView() {
 
   function card(member) {
     return el('button', {
-      class: `mcard${member.status === 'leaved' ? ' is-dim' : ''}`, type: 'button',
+      class: `mcard ${CARD_CLASS[member.status] ?? ''}`.trim(), type: 'button',
       onClick: () => edit(member),
     }, [
       el('span', { class: 'mcard__top' }, [

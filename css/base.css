@@ -25,6 +25,11 @@
   --ok-soft: #e4f3ea;
   --warn: #a8690a;
   --warn-soft: #fbf0d9;
+  /* 成員名單裡「已離開」與「黑名單」那一整列（或那一張卡片）的底色，以及黑底上的字。 */
+  --row-left: #b9b8b5;
+  --row-banned: #15161a;
+  --on-banned: #ffffff;
+  --on-banned-soft: #c9ccd4;
 
   --radius: 10px;
   --radius-small: 7px;
@@ -133,6 +138,7 @@ p:last-child { margin-bottom: 0; }
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-small);
   background: var(--surface);
+  color: var(--ink);        /* 不跟著所在那一列的字色走：欄位永遠是白底深字 */
   width: 100%;
 }
 select.field { padding-right: 28px; cursor: pointer; }

@@ -146,7 +146,14 @@
 .table .table__flag { text-align: center; }
 .table__flag input { width: 16px; height: 16px; vertical-align: middle; cursor: pointer; }
 .table__email { min-width: 230px; }
-.table tr.is-dim td { color: var(--muted); }
+/* 成員表：已離開整列灰底，黑名單整列黑底白字；能改的欄位（下拉、輸入框）維持白底。
+   以前是把已離開的字變淡，看起來像整列被鎖住不能改（案主 2026-10-08）。 */
+.table tr.is-left td { background: var(--row-left); }
+.table tr.is-left .muted, .table tr.is-left .table__aka { color: var(--ink-soft); }
+.table tr.is-banned td { background: var(--row-banned); color: var(--on-banned); }
+.table tr.is-banned .muted, .table tr.is-banned .table__aka { color: var(--on-banned-soft); }
+.table tr.is-banned .btn--ghost { color: var(--on-banned); }
+.table tr.is-banned .btn--ghost:hover:not(:disabled) { background: rgba(255, 255, 255, .16); }
 
 /* 可以點選的表格（待移除名單、新增成員） */
 .table--pick tbody tr { cursor: pointer; }

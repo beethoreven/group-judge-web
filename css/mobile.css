@@ -232,7 +232,12 @@ body { font-size: 16px; }
   -webkit-tap-highlight-color: transparent;
 }
 .mcard:active { background: var(--surface-sunk); }
-.mcard.is-dim .mcard__name { color: var(--muted); }
+/* 已離開的卡片灰底，黑名單的卡片黑底白字（跟桌面版的成員表同一套，見 css/desktop.css）。 */
+.mcard.is-left { background: var(--row-left); border-color: var(--row-left); }
+.mcard.is-left .mcard__meta { color: var(--ink-soft); }
+.mcard.is-banned { background: var(--row-banned); border-color: var(--row-banned); color: var(--on-banned); }
+.mcard.is-banned .mcard__meta { color: var(--on-banned-soft); }
+.mcard.is-left:active, .mcard.is-banned:active { opacity: .85; }
 .mcard__top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .mcard__name { margin-right: 2px; font-weight: 700; overflow-wrap: anywhere; }
 .mcard__meta { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }

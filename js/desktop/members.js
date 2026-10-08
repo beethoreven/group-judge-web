@@ -11,6 +11,9 @@ import { asyncButton, badge, clear, el, emptyState, loadFailed, spinner, toast, 
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
 import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, akaText, changeMember, databaseNote, filterMembers, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
+/** 已離開、黑名單的那一列各有自己的底色（見 css/desktop.css）。 */
+const ROW_CLASS = { leaved: 'is-left', banned: 'is-banned' };
+
 export function createMembersView() {
   const node = el('div', { class: 'view' });
   const filter = { keyword: '', status: '' };
@@ -209,7 +212,7 @@ export function createMembersView() {
       }
     }, { class: 'btn btn--small btn--ghost', title: '這一筆跟另一筆其實是同一個人：併進有 LINE 帳號的那一筆' });
 
-    return el('tr', { class: member.status === 'leaved' ? 'is-dim' : '' }, [
+    return el('tr', { class: ROW_CLASS[member.status] ?? '' }, [
       el('td', { class: 'table__name' }, [
         name,
         mine && badge('你', 'ink'),
