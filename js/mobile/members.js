@@ -10,7 +10,7 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, openModal, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, akaText, changeMember, databaseNote, filterMembers, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
+import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, databaseNote, filterMembers, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 /** 已離開、黑名單的卡片各有自己的底色（見 css/mobile.css）。 */
 const CARD_CLASS = { leaved: 'is-left', banned: 'is-banned' };
@@ -140,7 +140,6 @@ export function createMembersView() {
         !member.has_line_id && badge('沒有 LINE 帳號', 'neutral'),
         member.id === data.me && badge('你', 'neutral'),
       ]),
-      member.alt_name && el('span', { class: 'mcard__meta' }, akaText(member)),
       el('span', { class: 'mcard__meta' }, [
         member.join_at ? `${fmtDate(member.join_at)} 加入` : '加入時間不明',
         member.last_speak && (member.join_at && member.last_speak === member.join_at
