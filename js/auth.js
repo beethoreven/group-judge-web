@@ -13,8 +13,11 @@ import { api, ApiError, IS_LOCAL, getToken, setToken } from './api.js';
 
 // Google OAuth 用戶端 ID。部署時由 index.html 的 window.__GOOGLE_CLIENT_ID__
 // 提供，本機開發可以用 ?googleClientId= 覆寫。
+//
+// ★ 覆寫只在本機有效，理由同 js/api.js 的 ?apiBase=：正式站不讓網址決定
+//   「跟誰登入、把憑證交給誰」。
 const CLIENT_ID =
-  new URLSearchParams(window.location.search).get('googleClientId') ||
+  (IS_LOCAL && new URLSearchParams(window.location.search).get('googleClientId')) ||
   window.__GOOGLE_CLIENT_ID__ ||
   '';
 

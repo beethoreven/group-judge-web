@@ -9,17 +9,20 @@
 const HOST = window.location.hostname;
 export const IS_LOCAL = HOST === 'localhost' || HOST === '127.0.0.1' || HOST === '[::1]';
 
-// 後端位址，依序取第一個有值的。
+// 後端位址。
 //
 // ★ 本機那一段不能省。index.html 裡寫死的是正式站的後端網址，而本機開發用的
 //   是同一份 index.html——少了這一段，在 localhost 開頁面時這一頁會去跟正式
 //   後端說話，症狀是一整排 `Failed to fetch`，看起來像「本機後端沒開」。
 //   5002 是後端的預設 port。要在本機打別的位址，帶 ?apiBase= 就好。
-const API_BASE =
-  new URLSearchParams(window.location.search).get('apiBase') ??
-  (IS_LOCAL ? 'http://localhost:5002' : null) ??
-  window.__GROUP_JUDGE_API_HOST__ ??
-  '';
+//
+// ★ ?apiBase= **只在本機有效**。每個請求都帶著登入憑證（下面的 Authorization），
+//   正式站要是也認這個參數，別人只要給管理員一條
+//   `…/group-judge-web/?apiBase=https://別人的主機` 的連結，他一點開，憑證就送到
+//   那台主機去了（2026-10-09 安全檢查時實測到的，之前沒有這個限制）。
+const API_BASE = IS_LOCAL
+  ? (new URLSearchParams(window.location.search).get('apiBase') ?? 'http://localhost:5002')
+  : (window.__GROUP_JUDGE_API_HOST__ ?? '');
 
 const TOKEN_KEY = 'group-judge-session';
 
