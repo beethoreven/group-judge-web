@@ -146,7 +146,11 @@ function forbidden() {
 // ── 啟動 ──────────────────────────────────────────────────
 
 async function start() {
-  setAuthHandlers({ reauthenticate, forbidden });
+  setAuthHandlers({
+    reauthenticate,
+    forbidden,
+    databaseDown: (message) => toast(message || '資料庫暫時沒有回應，請稍後再試', { error: true, duration: 8000 }),
+  });
   adoptDevSession();
   clear(app).append(spinner());
 

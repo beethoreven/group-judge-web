@@ -127,6 +127,9 @@ export function toast(message, { error = false, duration = error ? 5000 : 3200 }
     toastLayer = el('div', { class: 'toast-layer', role: 'status', 'aria-live': 'polite' });
     document.body.append(toastLayer);
   }
+  // 同一句話已經在畫面上就不再疊一則——同一個錯誤常常會從兩個地方各報一次
+  // （例如資料庫逾時：api.js 統一報一次，按鈕自己的失敗處理又報一次）。
+  if ([...toastLayer.children].some((shown) => shown.textContent === message)) return;
   const node = el('div', { class: `toast${error ? ' toast--error' : ''}` }, message);
   toastLayer.append(node);
   setTimeout(() => node.remove(), duration);

@@ -52,13 +52,17 @@ export class ApiError extends Error {
 }
 
 /**
- * 憑證失效（401）與沒有權限（403）時要做什麼。由 main.js 啟動時註冊，
+ * 憑證失效（401）、沒有權限（403）、資料庫沒回應時要做什麼。由 main.js 啟動時註冊，
  * 這一層不直接相依於畫面。
  *
- *   reauthenticate()  請使用者重新登入。回傳 Promise<boolean>：登入成功了沒。
- *   forbidden()       這個帳號已經不是管理員了。
+ *   reauthenticate()       請使用者重新登入。回傳 Promise<boolean>：登入成功了沒。
+ *   forbidden()            這個帳號已經不是管理員了。
+ *   databaseDown(message)  後端說資料庫逾時或連不上（message 是後端給的那一句）。
  */
-let handlers = { reauthenticate: async () => false, forbidden: () => {} };
+let handlers = { reauthenticate: async () => false, forbidden: () => {}, databaseDown: () => {} };
+
+// 後端在資料庫沒有回應時給的代號（後端 app.py）。訊息文字會變，代號不會。
+const DATABASE_DOWN = ['db_timeout', 'db_unavailable'];
 export function setAuthHandlers(next) {
   handlers = { ...handlers, ...next };
 }
@@ -126,6 +130,12 @@ async function request(method, path, options = {}) {
   // 只會繞一圈得到同樣的結果。
   if (res.status === 403 && payload?.code === 'forbidden' && !isAuthCall) {
     handlers.forbidden();
+  }
+
+  // 資料庫逾時或連不上：不管是哪一個畫面發出的請求，都跳一則提示（案主 2026-10-10）。
+  // 少了這個，載入中的畫面只會換成「讀取失敗」，背景的請求更是什麼都看不出來。
+  if (DATABASE_DOWN.includes(payload?.code)) {
+    handlers.databaseDown(payload.error);
   }
 
   if (!res.ok) {
