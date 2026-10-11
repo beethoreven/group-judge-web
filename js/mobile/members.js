@@ -168,7 +168,7 @@ export function createMembersView() {
       });
 
       const exempt = el('input', { type: 'checkbox', id: 'm-exempt', checked: member.exempt });
-      const merge = !member.has_line_id && asyncButton('合併到有 LINE 帳號的那一筆…', async () => {
+      const merge = !member.has_line_id && asyncButton('跟有 LINE 帳號的那一筆合併…', async () => {
         try {
           close();
           if (await mergeMember(member, data.members)) await load({ force: true });

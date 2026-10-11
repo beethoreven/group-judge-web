@@ -113,35 +113,37 @@ export const NO_LINE_HINT =
   '匯入或手動建立的資料，還沒對應到 LINE 帳號。他第一次說話、或有人在群組裡 tag 他的時候，小判官會用名字自動接上；名字對不上（例如改過名字）的話，他說話之後會多出一筆，用「合併」把兩筆併成一筆。';
 
 /**
- * 把一筆沒有 LINE 帳號的資料，併進同一個人有 LINE 帳號的那一筆。
+ * 同一個人有兩筆的時候合成一筆：留下 member（沒有 LINE 帳號、匯入的那一筆——加入時間
+ * 與算好的發話紀錄都在上面），把另一筆的 LINE 帳號、名字與這段期間的則數接過來，
+ * 另一筆刪掉。
  *
- * 流程：先挑要併進哪一筆，再確認一次（併了就拆不回來），然後請後端合併。
- * 回傳 true 代表併好了、名單該重新載入；取消就是 false。
- * 併的規則在後端（db/members.py 的 merge），確認框裡講的是結果。
+ * 流程：先挑是哪一筆有 LINE 帳號的，再確認一次（合了就拆不回來），然後請後端合併。
+ * 回傳 true 代表合好了、名單該重新載入；取消就是 false。
+ * 合的規則在後端（db/members.py 的 merge），確認框裡講的是結果。
  */
 export async function mergeMember(member, members) {
-  const target = await pickMergeTarget(member, members.filter((m) => m.has_line_id && m.id !== member.id));
-  if (!target) return false;
-  const from = member.name || '（沒有名字）';
-  const into = target.name || '（沒有名字）';
+  const other = await pickMergeTarget(member, members.filter((m) => m.has_line_id && m.id !== member.id));
+  if (!other) return false;
+  const kept = member.name || '（沒有名字）';
+  const line = other.name || '（沒有名字）';
   const ok = await confirmDialog({
-    title: `把「${from}」併進「${into}」？`,
-    body: `合併之後只會留下「${into}」這一筆：加入時間用「${from}」的（如果「${into}」沒有），每個月的發話則數加在一起，白名單與歷次名單上的紀錄也會改掛過去。「${from}」這一筆會消失，沒辦法復原。`,
+    title: `把「${kept}」跟「${line}」合成一筆？`,
+    body: `合併之後留下的是「${kept}」這一筆：它的加入時間與原本的發話紀錄都保留，再接上「${line}」的 LINE 帳號，名字換成 LINE 上的「${line}」，兩邊每個月的則數加在一起。「${line}」那一筆會消失，沒辦法復原。`,
     confirmText: '合併',
     cancelText: '取消',
     danger: true,
   });
   if (!ok) return false;
-  await api.post(`/api/members/${member.id}/merge`, { into: target.id });
+  await api.post(`/api/members/${member.id}/merge`, { with: other.id });
   forgetMembers();
-  toast(`已把「${from}」併進「${into}」`);
+  toast(`已合併：「${kept}」接上了 LINE 帳號，名字是「${line}」`);
   return true;
 }
 
 /** 挑人的清單一次最多列幾位。群組有幾百人，全部畫出來沒有人會往下找，用搜尋比較快。 */
 const MERGE_CHOICES = 60;
 
-/** 挑要併進哪一筆：只列有 LINE 帳號的成員。回傳 Promise<成員 | null>。 */
+/** 挑他有 LINE 帳號的是哪一筆：只列有 LINE 帳號的成員。回傳 Promise<成員 | null>。 */
 function pickMergeTarget(member, candidates) {
   const { done } = openModal((close) => {
     const list = el('div', { class: 'choices' });

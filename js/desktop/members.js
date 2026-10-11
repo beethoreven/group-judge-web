@@ -210,7 +210,7 @@ export function createMembersView() {
       } catch (err) {
         toastError(err, '合併失敗');
       }
-    }, { class: 'btn btn--small btn--ghost', title: '這一筆跟另一筆其實是同一個人：併進有 LINE 帳號的那一筆' });
+    }, { class: 'btn btn--small btn--ghost', title: '這一筆跟另一筆其實是同一個人：合成一筆，留下這一筆並接上 LINE 帳號' });
 
     return el('tr', { class: ROW_CLASS[member.status] ?? '' }, [
       el('td', { class: 'table__name' }, [
