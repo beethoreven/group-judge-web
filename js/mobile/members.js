@@ -10,14 +10,14 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, openModal, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, databaseNote, filterMembers, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
+import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, databaseNote, filterMembers, MEMBER_ORDERS, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 /** 已離開、黑名單的卡片各有自己的底色（見 css/mobile.css）。 */
 const CARD_CLASS = { leaved: 'is-left', banned: 'is-banned' };
 
 export function createMembersView() {
   const node = el('div', { class: 'mview' });
-  const filter = { keyword: '', status: '' };
+  const filter = { keyword: '', status: '', order: 'name' };
   let data = null;
   let generation = 0;
   const pruneButton = asyncButton('清除半年以前的紀錄', async () => {
@@ -66,13 +66,21 @@ export function createMembersView() {
         el('option', { value, selected: filter.status === value }, label)),
     ]);
 
+    const order = el('select', {
+      class: 'field', 'aria-label': '排序方式',
+      onChange: (event) => {
+        filter.order = event.target.value;
+        renderList();
+      },
+    }, MEMBER_ORDERS.map(({ value, label }) => el('option', { value, selected: filter.order === value }, label)));
+
     clear(node).append(
       ...[
         el('div', { class: 'mview__head' }, [el('h1', {}, '成員')]),
         notLinkedNotice(data),
         overview(data.overview),
         databaseLine(data.overview.database),
-        el('div', { class: 'mfilters' }, [search, status]),
+        el('div', { class: 'mfilters' }, [search, status, order]),
         listSlot,
         pruneButton,
       ].filter(Boolean),
@@ -134,6 +142,7 @@ export function createMembersView() {
     }, [
       el('span', { class: 'mcard__top' }, [
         el('span', { class: 'mcard__name' }, member.name || '（沒有名字）'),
+        el('span', { class: 'muted' }, `#${member.id}`),
         badge(STATUS_LABEL[member.status], STATUS_TONE[member.status]),
         member.role === ADMIN && badge('管理員', 'ink'),
         member.exempt && badge('不列入整理', 'ok'),

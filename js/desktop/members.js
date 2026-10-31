@@ -9,14 +9,14 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, changeMember, databaseNote, filterMembers, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
+import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, changeMember, databaseNote, filterMembers, MEMBER_ORDERS, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 /** 已離開、黑名單的那一列各有自己的底色（見 css/desktop.css）。 */
 const ROW_CLASS = { leaved: 'is-left', banned: 'is-banned' };
 
 export function createMembersView() {
   const node = el('div', { class: 'view' });
-  const filter = { keyword: '', status: '' };
+  const filter = { keyword: '', status: '', order: 'name' };
   let data = null;
   let generation = 0;
   const pruneButton = asyncButton('清除半年以前的紀錄', async () => {
@@ -84,6 +84,14 @@ export function createMembersView() {
         el('option', { value, selected: filter.status === value }, label)),
     ]);
 
+    const order = el('select', {
+      class: 'field', 'aria-label': '排序方式',
+      onChange: (event) => {
+        filter.order = event.target.value;
+        renderTable();
+      },
+    }, MEMBER_ORDERS.map(({ value, label }) => el('option', { value, selected: filter.order === value }, label)));
+
     clear(node).append(
       el('div', { class: 'view__head' }, [
         el('h1', {}, '成員'),
@@ -93,7 +101,7 @@ export function createMembersView() {
         notLinkedNotice(data),
         overview(data.overview),
         databaseLine(data.overview.database),
-        el('div', { class: 'filters' }, [search, status, pruneButton]),
+        el('div', { class: 'filters' }, [search, status, order, pruneButton]),
         tableSlot,
       ].filter(Boolean),
     );
@@ -147,6 +155,7 @@ export function createMembersView() {
     }
     clear(tableSlot).append(el('div', { class: 'tablewrap' }, el('table', { class: 'table' }, [
       el('thead', {}, el('tr', {}, [
+        el('th', { class: 'table__num' }, 'ID'),
         el('th', {}, 'LINE 名稱'),
         el('th', {}, '狀態'),
         el('th', {}, '身分'),
@@ -213,6 +222,7 @@ export function createMembersView() {
     }, { class: 'btn btn--small btn--ghost', title: '這一筆跟另一筆其實是同一個人：合成一筆，留下這一筆並接上 LINE 帳號' });
 
     return el('tr', { class: ROW_CLASS[member.status] ?? '' }, [
+      el('td', { class: 'table__num muted' }, String(member.id)),
       el('td', { class: 'table__name' }, [
         name,
         mine && badge('你', 'ink'),

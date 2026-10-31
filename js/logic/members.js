@@ -289,9 +289,18 @@ export function lastSpoke(member, fmtDate) {
 }
 
 /** 依關鍵字與狀態篩選。兩種版面的搜尋框共用同一套規則。 */
-export function filterMembers(members, { keyword = '', status = '' } = {}) {
+export function filterMembers(members, { keyword = '', status = '', order = 'name' } = {}) {
   const key = keyword.trim().toLowerCase();
-  return members.filter((m) =>
+  const shown = members.filter((m) =>
     (!status || m.status === status) &&
     (!key || (m.name || '').toLowerCase().includes(key) || (m.email || '').toLowerCase().includes(key)));
+  // 照 ID：新建的資料排在最後。剛換過來、有人改名接不上帳號時，用來找多出來的那一筆
+  // （案主 2026-10-31）。預設還是後端給的順序（狀態 → 身分 → 名字）。
+  return order === 'id' ? [...shown].sort((a, b) => a.id - b.id) : shown;
 }
+
+/** 成員清單的排序方式。第一個是預設。 */
+export const MEMBER_ORDERS = [
+  { value: 'name', label: '照名字' },
+  { value: 'id', label: '照 ID' },
+];
