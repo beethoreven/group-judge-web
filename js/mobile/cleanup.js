@@ -69,6 +69,15 @@ export function createCleanupView() {
     }
   }, { class: 'btn btn--primary' });
 
+  const leftButton = asyncButton('全部設為已離開', async () => {
+    try {
+      const marked = await model.markAllLeft();
+      if (marked !== null) toast(`${marked} 人設為已離開`);
+    } catch (err) {
+      toastError(err, '設定失敗');
+    }
+  });
+
   const actions = el('div', { class: 'mactions__row' }, [addButton, removeButton, saveButton]);
 
   // ── 畫面 ──
@@ -79,6 +88,7 @@ export function createCleanupView() {
     removeButton.firstChild.textContent =
       mode === 'unmark' ? `取消移除（${counts.selected}）` : mode ? `移除（${counts.selected}）` : '移除';
     removeButton.setDisabled(!mode);
+    leftButton.setDisabled(!model.leftCandidates().length);
     const summary = savedSummary(model);
 
     setChildren(node, [
@@ -105,6 +115,7 @@ export function createCleanupView() {
           onToggle: () => model.toggle(row.user_id),
         })))
         : emptyState('這段期間每個人都有發話，名單是空的。'),
+      model.rows.length > 0 && el('div', { class: 'mview__extra' }, leftButton),
       protectedSection(),
     ]);
   }

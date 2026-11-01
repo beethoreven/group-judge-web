@@ -49,6 +49,15 @@ export function createCleanupView() {
     }
   }, { class: 'btn btn--primary' });
 
+  const leftButton = asyncButton('全部設為已離開', async () => {
+    try {
+      const marked = await model.markAllLeft();
+      if (marked !== null) toast(`${marked} 人設為已離開`);
+    } catch (err) {
+      toastError(err, '設定失敗');
+    }
+  });
+
   // ── 畫面 ──
 
   function render() {
@@ -56,6 +65,7 @@ export function createCleanupView() {
     const mode = model.removeMode();
     removeButton.firstChild.textContent = mode === 'unmark' ? '取消移除' : '移除';
     removeButton.setDisabled(!mode);
+    leftButton.setDisabled(!model.leftCandidates().length);
     const summary = savedSummary(model);
 
     setChildren(node, [
@@ -68,7 +78,7 @@ export function createCleanupView() {
             '：這段期間完全沒有發話的成員。區間內才加入的人不會列入。',
           ]),
         ]),
-        el('div', { class: 'toolbar' }, [addButton, removeButton, saveButton]),
+        el('div', { class: 'toolbar' }, [leftButton, addButton, removeButton, saveButton]),
       ]),
       blindNotice(model.blindSince) && el('div', { class: 'notice' }, blindNotice(model.blindSince)),
       el('div', { class: 'statusline' }, [

@@ -19,6 +19,7 @@
 import { api } from '../api.js';
 import { confirmDialog, el } from '../ui.js';
 import { fmtDate, fmtDateTime } from '../format.js';
+import { forgetMembers } from './members.js';
 
 export function createCleanup() {
   let server = null;
@@ -134,6 +135,29 @@ export function createCleanup() {
       emit();
     },
 
+    /**
+     * 「全部設為已離開」要標的人：已儲存的名單上、還在群組裡的。名單有還沒存的
+     * 變更時是空的——要標的是存好的那份，不是畫面上改到一半的。
+     */
+    leftCandidates() {
+      if (!server?.saved || touched) return [];
+      return rows.filter((r) => r.state === 'kick' && r.status === 'joined');
+    },
+
+    /**
+     * 按下「全部設為已離開」：踢完人之後用。還沒接上 LINE 帳號的人被踢，小判官
+     * 認不出是誰（案主 2026-11-01），只能這樣補標。問過管理員才送出；回傳標了
+     * 幾個人，按取消是 null。
+     */
+    async markAllLeft() {
+      const people = this.leftCandidates();
+      if (!people.length || !(await confirmMarkLeft(people))) return null;
+      const { marked } = await api.post('/api/members/mark-left', { ids: people.map((r) => r.user_id) });
+      forgetMembers();
+      await this.load();
+      return marked;
+    },
+
     /** 存進資料庫。成功之後畫面換成後端回來的最新狀態。 */
     async save() {
       const kick = rows.filter((r) => r.state === 'kick').map((r) => r.user_id);
@@ -160,6 +184,20 @@ function confirmRepeat(people) {
     ]),
     confirmText: '是，再保留一次',
     cancelText: '否',
+    danger: true,
+  });
+}
+
+function confirmMarkLeft(people) {
+  return confirmDialog({
+    title: `把這 ${people.length} 位設為已離開？`,
+    body: el('div', {}, [
+      el('p', {}, '請在 LINE 把他們移出群組之後再按。已經接上 LINE 帳號的人被移出時小判官會自己記，這裡一起標也沒關係；黑名單上的人狀態不會變。'),
+      el('div', { class: 'checklist' }, people.map((p) => el('div', { class: 'checklist__entry' },
+        el('strong', {}, p.name || '（沒有名字）')))),
+    ]),
+    confirmText: '設為已離開',
+    cancelText: '取消',
     danger: true,
   });
 }
