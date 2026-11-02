@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>小判官（示範版）</title>
+  <link rel="icon" type="image/png" href="../favicon.png">
+
+  <!--
+    示範版：畫面程式全部沿用正式版的 ../js/，只用下面的 import map 把 api.js、auth.js
+    換成 demo/ 裡的假資料版本，一個請求都不會送到後端。說明在 demo/README.md。
+  -->
+  <script>
+    // ★ 這一頁跟正式版同一個來源（beethoreven.github.io），localStorage 是共用的。
+    //   所有 key 加上「demo:」，示範版讀不到正式版的管理員登入憑證，切換裝置、
+    //   排序之類的偏好也不會影響正式版。這一段一定要在任何模組之前執行。
+    (() => {
+      const PREFIX = 'demo:';
+      const S = Storage.prototype;
+      const { getItem, setItem, removeItem } = S;
+      S.getItem = function (key) { return getItem.call(this, PREFIX + key); };
+      S.setItem = function (key, value) { return setItem.call(this, PREFIX + key, value); };
+      S.removeItem = function (key) { return removeItem.call(this, PREFIX + key); };
+    })();
+    window.__GOOGLE_CLIENT_ID__ = '751584304633-jih4ib0f4ikauc3qlh1o5vkgrit2kr1d.apps.googleusercontent.com';
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="../css/base.css?v=3ff0adead0">
+  <link rel="stylesheet" href="demo.css?v=6a636bff4f">
+  <!-- stamp:start（demo/tools/stamp.py 產生的，不要手改） -->
+  <script>window.__ASSET_VERSIONS__ = {"css/desktop.css": "b2b4945081", "css/mobile.css": "3a0d567bd5"};</script>
+  <script type="importmap">
+{
+  "imports": {
+    "../js/api.js": "./api.js?v=94f249a405",
+    "../js/auth.js": "./auth.js?v=4eae0f6053",
+    "../js/desktop/cleanup.js": "../js/desktop/cleanup.js?v=3322bdc9c4",
+    "../js/desktop/members.js": "../js/desktop/members.js?v=6cce4172ed",
+    "../js/desktop/messages.js": "../js/desktop/messages.js?v=cd14c883e8",
+    "../js/desktop/roster.js": "../js/desktop/roster.js?v=b2fe935b58",
+    "../js/desktop/rules.js": "../js/desktop/rules.js?v=7eb2859871",
+    "../js/desktop/shell.js": "../js/desktop/shell.js?v=7928cbd1e1",
+    "../js/desktop/unknown.js": "../js/desktop/unknown.js?v=7fe50c5548",
+    "../js/device.js": "../js/device.js?v=7d569b4a60",
+    "../js/format.js": "../js/format.js?v=be94aa1864",
+    "../js/logic/cleanup.js": "../js/logic/cleanup.js?v=61469b2a71",
+    "../js/logic/content.js": "../js/logic/content.js?v=40031b21d4",
+    "../js/logic/members.js": "../js/logic/members.js?v=ac842c0895",
+    "../js/logic/navigation.js": "../js/logic/navigation.js?v=663697d7ac",
+    "../js/logic/roster.js": "../js/logic/roster.js?v=bdaccd6854",
+    "../js/logic/unknown.js": "../js/logic/unknown.js?v=6d943d9877",
+    "../js/main.js": "../js/main.js?v=d460fbf265",
+    "../js/mobile/cleanup.js": "../js/mobile/cleanup.js?v=972a1e9300",
+    "../js/mobile/members.js": "../js/mobile/members.js?v=e75c0c4c2b",
+    "../js/mobile/messages.js": "../js/mobile/messages.js?v=4bcecd4029",
+    "../js/mobile/roster.js": "../js/mobile/roster.js?v=a41626aa19",
+    "../js/mobile/rules.js": "../js/mobile/rules.js?v=03795bd51b",
+    "../js/mobile/shell.js": "../js/mobile/shell.js?v=29a55e9625",
+    "../js/mobile/unknown.js": "../js/mobile/unknown.js?v=652f24399b",
+    "../js/ui.js": "../js/ui.js?v=6f1f97eaef",
+    "../js/widgets.js": "../js/widgets.js?v=da48d66b78",
+    "./api.js": "./api.js?v=94f249a405",
+    "./auth.js": "./auth.js?v=4eae0f6053",
+    "./data.js": "./data.js?v=324505dd85",
+    "./session.js": "./session.js?v=07e3179933"
+  }
+}
+  </script>
+  <!-- stamp:end -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div class="demo-banner" role="note">示範版｜資料都是虛構的，不會連到小判官的後端；可以隨意操作，重新整理就還原。</div>
+  <div id="app"></div>
+  <script type="module" src="../js/main.js?v=d460fbf265"></script>
+</body>
+</html>
