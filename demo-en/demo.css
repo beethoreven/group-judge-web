@@ -1,0 +1,26 @@
+/* 自動產生（demo-en/tools/build.py），來源是 demo/demo.css。不要手改：改 demo-en/tools/translations.py 再重跑。 */
+/* 示範版自己的樣式：最上面那條提示，以及登入畫面多出來的按鈕與說明。 */
+
+.demo-banner {
+  padding: 6px 16px;
+  background: var(--warn-soft, #fbf0d9);
+  color: var(--warn, #a8690a);
+  border-bottom: 1px solid var(--line, #e3e0d8);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.demo-guest {
+  display: block;
+  margin: 12px auto 0;
+}
+
+.demo-note {
+  max-width: 300px;
+  margin: 14px auto 0;
+  color: var(--muted, #7b8291);
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+}

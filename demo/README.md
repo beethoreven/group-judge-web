@@ -7,6 +7,10 @@ https://beethoreven.github.io/group-judge-web/demo/
 功能說明。按了儲存、改了成員都只改這一頁的記憶體，重新整理就還原。之後不需要了，
 整個 `demo/` 資料夾刪掉就好，正式版不受影響。
 
+★ 英文示範版（`demo-en/`）的假後端是從這裡的 `api.js`、`auth.js`、`session.js`、`demo.css`
+產生的，改了這幾支要跑 `python3 demo-en/tools/build.py`；只刪這個資料夾的話，先看
+`demo-en/README.md`。
+
 ## 怎麼做到的
 
 | 檔案 | 作用 |
