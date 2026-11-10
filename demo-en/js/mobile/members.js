@@ -11,10 +11,7 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, openModal, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, databaseNote, filterMembers, MEMBER_ORDERS, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
-
-/** 已離開、黑名單的卡片各有自己的底色（見 css/mobile.css）。 */
-const CARD_CLASS = { leaved: 'is-left', banned: 'is-banned' };
+import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_FILTERS, STATUS_LABEL, STATUS_TONE, changeMember, memberTone, databaseNote, filterMembers, MEMBER_ORDERS, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 export function createMembersView() {
   const node = el('div', { class: 'mview' });
@@ -63,7 +60,7 @@ export function createMembersView() {
       },
     }, [
       el('option', { value: '' }, 'All'),
-      ...Object.entries(STATUS_LABEL).map(([value, label]) =>
+      ...STATUS_FILTERS.map(([value, label]) =>
         el('option', { value, selected: filter.status === value }, label)),
     ]);
 
@@ -138,13 +135,14 @@ export function createMembersView() {
 
   function card(member) {
     return el('button', {
-      class: `mcard ${CARD_CLASS[member.status] ?? ''}`.trim(), type: 'button',
+      class: `mcard ${memberTone(member)}`.trim(), type: 'button',
       onClick: () => edit(member),
     }, [
       el('span', { class: 'mcard__top' }, [
         el('span', { class: 'mcard__name' }, member.name || '(no name)'),
         el('span', { class: 'muted' }, `#${member.id}`),
         badge(STATUS_LABEL[member.status], STATUS_TONE[member.status]),
+        member.banned && badge('Banned', 'danger'),
         member.role === ADMIN && badge('Admin', 'ink'),
         member.exempt && badge('Exempt', 'ok'),
         !member.has_line_id && badge('No LINE account', 'neutral'),
@@ -178,6 +176,7 @@ export function createMembersView() {
       });
 
       const exempt = el('input', { type: 'checkbox', id: 'm-exempt', checked: member.exempt });
+      const banned = el('input', { type: 'checkbox', id: 'm-banned', checked: member.banned });
       const merge = !member.has_line_id && asyncButton('Merge with the row that has LINE…', async () => {
         try {
           close();
@@ -194,6 +193,7 @@ export function createMembersView() {
         if (Number(role.value) !== member.role) changes.role = Number(role.value);
         if (email.value.trim() !== (member.email ?? '')) changes.email = email.value.trim();
         if (exempt.checked !== member.exempt) changes.exempt = exempt.checked;
+        if (banned.checked !== member.banned) changes.banned = banned.checked;
         if (!Object.keys(changes).length) {
           close();
           return;
@@ -221,6 +221,7 @@ export function createMembersView() {
           el('label', { for: 'm-role' }, 'Role'), role,
           el('label', { for: 'm-email' }, 'Google account for signing in'), email,
           el('label', { class: 'mcheck', for: 'm-exempt' }, [exempt, 'Exempt (honorary seat — never put on the removal list)']),
+          el('label', { class: 'mcheck', for: 'm-banned' }, [banned, 'Banned (Group Judge posts a warning when they join)']),
           mine && el('p', { class: 'muted' }, 'You cannot change your own role or email.'),
           !member.has_line_id && el('p', { class: 'muted' }, NO_LINE_HINT),
           merge,

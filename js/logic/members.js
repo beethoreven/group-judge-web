@@ -8,8 +8,19 @@
 import { api } from '../api.js';
 import { confirmDialog, el, emptyState, openModal, toast } from '../ui.js';
 
-export const STATUS_LABEL = { joined: '在群組', leaved: '已離開', banned: '黑名單' };
-export const STATUS_TONE = { joined: 'ok', leaved: 'neutral', banned: 'danger' };
+// 在不在群組（status）與黑名單（banned）是兩件事（2026-11-10 拆開）：黑名單的人
+// 也照實記著他在不在群組。畫面上黑名單照舊排最後、整列黑底，不管他在不在群組。
+export const STATUS_LABEL = { joined: '在群組', leaved: '已離開' };
+export const STATUS_TONE = { joined: 'ok', leaved: 'neutral' };
+
+/** 狀態篩選的選項：在不在群組兩種，加上黑名單。 */
+export const STATUS_FILTERS = [...Object.entries(STATUS_LABEL), ['banned', '黑名單']];
+
+/** 一列（一張卡片）的底色：黑名單優先，其次是已離開（見 css/desktop.css、mobile.css）。 */
+export function memberTone(member) {
+  if (member.banned) return 'is-banned';
+  return member.status === 'leaved' ? 'is-left' : '';
+}
 export const ROLE_LABEL = { 1: '管理員', 2: '一般成員' };
 export const ADMIN = 1;
 
@@ -75,16 +86,16 @@ export function unknownNote(later) {
 }
 
 /**
- * 改一個成員。changes 是 { role?, status?, email?, exempt? }。
+ * 改一個成員。changes 是 { role?, status?, email?, exempt?, banned? }。
  * exempt 是「不列入整理」：系統不會把他算進待移除名單（榮譽席）。這個月的名單
  * 已經存了、而他在上面的話，後端會一併把他拿掉——這裡負責告訴管理員。
  * 會讓人後悔的改動先問一次；使用者按否就回傳 null，什麼都沒改。
  */
 export async function changeMember(member, changes) {
-  if (changes.status === 'banned' && member.status !== 'banned') {
+  if (changes.banned === true && !member.banned) {
     const ok = await confirmDialog({
       title: `把「${member.name || '（沒有名字）'}」列入黑名單？`,
-      body: '列入之後，他只要加入群組，小判官就會在群組裡發警告。黑名單不會因為他離開或重新加入而解除，要在這裡手動改回來。',
+      body: '列入之後，他只要加入群組，小判官就會在群組裡發警告。黑名單不會因為他離開或重新加入而解除，要在這裡取消勾選才會解除。',
       confirmText: '列入黑名單',
       cancelText: '取消',
       danger: true,
@@ -292,7 +303,7 @@ export function lastSpoke(member, fmtDate) {
 export function filterMembers(members, { keyword = '', status = '', order = 'name' } = {}) {
   const key = keyword.trim().toLowerCase();
   const shown = members.filter((m) =>
-    (!status || m.status === status) &&
+    (!status || (status === 'banned' ? m.banned : m.status === status)) &&
     (!key || (m.name || '').toLowerCase().includes(key) || (m.email || '').toLowerCase().includes(key)));
   // 照 ID：新建的資料排在最後。剛換過來、有人改名接不上帳號時，用來找多出來的那一筆
   // （案主 2026-10-31）。預設還是後端給的順序（狀態 → 身分 → 名字）。

@@ -10,10 +10,7 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, changeMember, databaseNote, filterMembers, MEMBER_ORDERS, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
-
-/** 已離開、黑名單的那一列各有自己的底色（見 css/desktop.css）。 */
-const ROW_CLASS = { leaved: 'is-left', banned: 'is-banned' };
+import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_FILTERS, STATUS_LABEL, changeMember, memberTone, databaseNote, filterMembers, MEMBER_ORDERS, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 export function createMembersView() {
   const node = el('div', { class: 'view' });
@@ -81,7 +78,7 @@ export function createMembersView() {
       },
     }, [
       el('option', { value: '' }, 'All statuses'),
-      ...Object.entries(STATUS_LABEL).map(([value, label]) =>
+      ...STATUS_FILTERS.map(([value, label]) =>
         el('option', { value, selected: filter.status === value }, label)),
     ]);
 
@@ -96,7 +93,7 @@ export function createMembersView() {
     clear(node).append(
       el('div', { class: 'view__head' }, [
         el('h1', {}, 'Members'),
-        el('p', {}, 'Everyone Group Judge has seen. Join and message times are what it observed and cannot be edited; role, status and email can.'),
+        el('p', {}, 'Everyone Group Judge has seen. Join and message times are what it observed and cannot be edited; role, status, email and the ban list can.'),
       ]),
       ...[
         notLinkedNotice(data),
@@ -165,6 +162,7 @@ export function createMembersView() {
         el('th', {}, 'Last spoke'),
         el('th', { class: 'table__num' }, 'Silent'),
         el('th', { class: 'table__flag', title: 'Checked people are never put on the removal list (honorary seat)' }, 'Exempt'),
+        el('th', { class: 'table__flag', title: 'Group Judge posts a warning when a checked person joins; leaving or rejoining never lifts it' }, 'Banned'),
       ])),
       el('tbody', {}, shown.map(row)),
     ])));
@@ -214,6 +212,11 @@ export function createMembersView() {
       onChange: (event) => apply(member, { exempt: event.target.checked },
         event.target.checked ? `“${name}” is now exempt` : `“${name}” is no longer exempt`),
     });
+    const banned = el('input', {
+      type: 'checkbox', checked: member.banned, 'aria-label': `${name} banned`,
+      onChange: (event) => apply(member, { banned: event.target.checked },
+        event.target.checked ? `Banned “${name}”` : `Unbanned “${name}”`),
+    });
     const merge = !member.has_line_id && asyncButton('Merge…', async () => {
       try {
         if (await mergeMember(member, data.members)) await load({ force: true });
@@ -222,7 +225,7 @@ export function createMembersView() {
       }
     }, { class: 'btn btn--small btn--ghost', title: 'This row and another are the same person: merge them, keeping this row and linking the LINE account' });
 
-    return el('tr', { class: ROW_CLASS[member.status] ?? '' }, [
+    return el('tr', { class: memberTone(member) }, [
       el('td', { class: 'table__num muted' }, String(member.id)),
       el('td', { class: 'table__name' }, [
         name,
@@ -242,6 +245,7 @@ export function createMembersView() {
       el('td', { class: 'nowrap' }, lastSpoke(member, fmtDate)),
       el('td', { class: 'table__num nowrap' }, fmtDays(member.silent_days)),
       el('td', { class: 'table__flag' }, exempt),
+      el('td', { class: 'table__flag' }, banned),
     ]);
   }
 

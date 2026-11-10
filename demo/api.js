@@ -32,7 +32,7 @@ const store = createStore();
 const { period } = store;
 const DAY = 86400000;
 const iso = (date) => new Date(date).toISOString();
-const STATUS_ORDER = ['joined', 'leaved', 'banned'];
+const STATUS_ORDER = ['joined', 'leaved'];
 
 // ── 跟後端同一套的計算 ────────────────────────────────────
 
@@ -48,12 +48,13 @@ function memberJson(m) {
     email: m.id === 1 ? demoUser()?.email ?? null : m.email,
     role: m.role, status: m.status, join_at: m.join_at, last_speak: m.last_speak,
     silent_days: fullDays(m.last_speak), last_leave: m.last_leave, exempt: m.exempt,
+    banned: m.banned,
   };
 }
 
 function card(m) {
   return {
-    user_id: m.id, name: m.name, status: m.status,
+    user_id: m.id, name: m.name, status: m.status, banned: m.banned,
     join_at: m.join_at, last_speak: m.last_speak, silent_days: fullDays(m.last_speak),
   };
 }
@@ -68,7 +69,7 @@ function order(rows) {
 /** 系統算出來的待移除候選人：區間開始前就在、區間裡沒說話、沒設不列入整理。 */
 function candidates() {
   return store.members.filter((m) =>
-    m.status === 'joined' && !m.exempt && joinedBeforePeriod(m) && !spoke(m)).map((m) => m.id);
+    m.status === 'joined' && !m.banned && !m.exempt && joinedBeforePeriod(m) && !spoke(m)).map((m) => m.id);
 }
 
 /** 待移除名單頁籤的全部東西（後端 db/cleanup.py 的 state）。 */
@@ -101,7 +102,7 @@ function overview() {
   const unknownOpen = store.unknown.filter((u) => u.user_id === null).length;
   return {
     group: { bound: true, name: store.group.name, count: store.group.count, checked_at: store.group.checked_at },
-    known_joined: store.members.filter((m) => m.status === 'joined').length,
+    known_joined: store.members.filter((m) => m.status === 'joined' && !m.banned).length,
     unknown: { total: store.unknown.length, open: unknownOpen, later: store.unknownLater },
     database: store.database,
   };
@@ -144,7 +145,7 @@ function render(text) {
     '{人數}': String(kick.length),
     '{不得背書名單}': names(kick.filter((r) => r.prior_whitelist_at)),
     '{白名單}': names(state.rows.filter((r) => r.state === 'spare')),
-    '{管理員名稱}': store.members.filter((m) => m.role === 1 && m.status === 'joined').map((m) => ` @${m.name}`).join(''),
+    '{管理員名稱}': store.members.filter((m) => m.role === 1 && m.status === 'joined' && !m.banned).map((m) => ` @${m.name}`).join(''),
     '{名稱}': '新來的旅人',
     '{記錄名稱}': '黑名單示範帳號',
   };
@@ -217,9 +218,9 @@ const routes = [
   }],
 
   ['GET', /^\/api\/members$/, () => ({
-    // 跟後端 members.list_all 同一個順序：狀態 → 身分 → 名字。
+    // 跟後端 members.list_all 同一個順序：黑名單最後 → 狀態 → 身分 → 名字。
     members: [...store.members]
-      .sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) ||
+      .sort((a, b) => Number(a.banned) - Number(b.banned) || STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) ||
         a.role - b.role || a.name.localeCompare(b.name))
       .map(memberJson),
     overview: overview(),
@@ -234,6 +235,7 @@ const routes = [
       if (changes.status === 'leaved' && m.status !== 'leaved') m.last_leave = iso(Date.now());
       m.status = changes.status;
     }
+    if ('banned' in changes) m.banned = Boolean(changes.banned);
     if ('role' in changes) m.role = changes.role;
     if ('email' in changes) m.email = changes.email || null;
     if ('exempt' in changes) {
@@ -299,7 +301,7 @@ const routes = [
     period: period.json,
     months: period.months,
     blind_since: null,
-    members: store.members.filter((m) => m.status === 'joined').map((m) => ({
+    members: store.members.filter((m) => m.status === 'joined' && !m.banned).map((m) => ({
       ...card(m),
       group: spoke(m) ? 'spoke' : !joinedBeforePeriod(m) ? 'new' : m.exempt ? 'exempt' : 'silent',
       counts: m.counts,

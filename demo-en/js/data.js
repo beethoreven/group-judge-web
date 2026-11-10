@@ -188,7 +188,7 @@ function people(at) {
     { id: 10, name: 'Mystery Fan', line: true, status: 'joined', join: ago(30), speak: 'join', counts: [0, 0] },
     { id: 11, name: 'Honorary Veteran', line: true, status: 'joined', join: ago(800), speak: beforeStart(200), counts: [0, 0], exempt: true },
     { id: 12, name: 'Arlo', line: true, status: 'leaved', join: ago(400), speak: ago(70), counts: [1, 0], leave: ago(20) },
-    { id: 13, name: 'Banned Demo Account', line: true, status: 'banned', join: ago(600), speak: ago(330), counts: [0, 0], leave: ago(300) },
+    { id: 13, name: 'Banned Demo Account', line: true, status: 'leaved', banned: true, join: ago(600), speak: ago(330), counts: [0, 0], leave: ago(300) },
     { id: 14, name: 'Rainy Day', line: true, status: 'joined', join: ago(400), speak: ago(9), counts: [0, 4], leave: ago(50) },
     { id: 15, name: 'Night Owl', line: true, status: 'joined', join: ago(240), speak: ago(1), counts: [0, 0] },
     { id: 16, name: '-Bee-', line: true, status: 'joined', join: ago(330), speak: beforeStart(25), counts: [0, 0] },
@@ -229,6 +229,7 @@ export function createStore(now = new Date()) {
     last_speak: iso(p.speak === 'join' ? p.join : p.speak),
     last_leave: iso(p.leave),
     exempt: Boolean(p.exempt),
+    banned: Boolean(p.banned),
     // 下面這些不會原樣給前端，是拿來算名單、對照用的。
     counts: p.counts,
     prior_whitelist_at: iso(p.priorWhitelist),

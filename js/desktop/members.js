@@ -9,10 +9,7 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, changeMember, databaseNote, filterMembers, MEMBER_ORDERS, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
-
-/** 已離開、黑名單的那一列各有自己的底色（見 css/desktop.css）。 */
-const ROW_CLASS = { leaved: 'is-left', banned: 'is-banned' };
+import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_FILTERS, STATUS_LABEL, changeMember, memberTone, databaseNote, filterMembers, MEMBER_ORDERS, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 export function createMembersView() {
   const node = el('div', { class: 'view' });
@@ -80,7 +77,7 @@ export function createMembersView() {
       },
     }, [
       el('option', { value: '' }, '全部狀態'),
-      ...Object.entries(STATUS_LABEL).map(([value, label]) =>
+      ...STATUS_FILTERS.map(([value, label]) =>
         el('option', { value, selected: filter.status === value }, label)),
     ]);
 
@@ -95,7 +92,7 @@ export function createMembersView() {
     clear(node).append(
       el('div', { class: 'view__head' }, [
         el('h1', {}, '成員'),
-        el('p', {}, '小判官看過的每一個人。加入時間與發話時間是它觀察到的，不能手動改；身分、狀態與 email 可以。'),
+        el('p', {}, '小判官看過的每一個人。加入時間與發話時間是它觀察到的，不能手動改；身分、狀態、email 與黑名單可以。'),
       ]),
       ...[
         notLinkedNotice(data),
@@ -164,6 +161,7 @@ export function createMembersView() {
         el('th', {}, '最後發話'),
         el('th', { class: 'table__num' }, '未發話'),
         el('th', { class: 'table__flag', title: '勾起來的人，系統不會把他算進待移除名單（榮譽席）' }, '不列入整理'),
+        el('th', { class: 'table__flag', title: '勾起來的人加入群組時，小判官會發警告；進出群組都不會解除' }, '黑名單'),
       ])),
       el('tbody', {}, shown.map(row)),
     ])));
@@ -213,6 +211,11 @@ export function createMembersView() {
       onChange: (event) => apply(member, { exempt: event.target.checked },
         event.target.checked ? `「${name}」不列入整理` : `「${name}」恢復列入整理`),
     });
+    const banned = el('input', {
+      type: 'checkbox', checked: member.banned, 'aria-label': `${name} 黑名單`,
+      onChange: (event) => apply(member, { banned: event.target.checked },
+        event.target.checked ? `已把「${name}」列入黑名單` : `已解除「${name}」的黑名單`),
+    });
     const merge = !member.has_line_id && asyncButton('合併…', async () => {
       try {
         if (await mergeMember(member, data.members)) await load({ force: true });
@@ -221,7 +224,7 @@ export function createMembersView() {
       }
     }, { class: 'btn btn--small btn--ghost', title: '這一筆跟另一筆其實是同一個人：合成一筆，留下這一筆並接上 LINE 帳號' });
 
-    return el('tr', { class: ROW_CLASS[member.status] ?? '' }, [
+    return el('tr', { class: memberTone(member) }, [
       el('td', { class: 'table__num muted' }, String(member.id)),
       el('td', { class: 'table__name' }, [
         name,
@@ -241,6 +244,7 @@ export function createMembersView() {
       el('td', { class: 'nowrap' }, lastSpoke(member, fmtDate)),
       el('td', { class: 'table__num nowrap' }, fmtDays(member.silent_days)),
       el('td', { class: 'table__flag' }, exempt),
+      el('td', { class: 'table__flag' }, banned),
     ]);
   }
 

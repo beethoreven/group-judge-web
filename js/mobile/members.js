@@ -10,10 +10,7 @@
 
 import { asyncButton, badge, clear, el, emptyState, loadFailed, openModal, spinner, toast, toastError } from '../ui.js';
 import { fmtDate, fmtDateTime, fmtDays } from '../format.js';
-import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_LABEL, STATUS_TONE, changeMember, databaseNote, filterMembers, MEMBER_ORDERS, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
-
-/** 已離開、黑名單的卡片各有自己的底色（見 css/mobile.css）。 */
-const CARD_CLASS = { leaved: 'is-left', banned: 'is-banned' };
+import { ADMIN, NO_LINE_HINT, ROLE_LABEL, STATUS_FILTERS, STATUS_LABEL, STATUS_TONE, changeMember, memberTone, databaseNote, filterMembers, MEMBER_ORDERS, lastSpoke, leftBriefly, loadMembers, mergeMember, notLinkedNotice, pruneOldRecords, unknownNote } from '../logic/members.js';
 
 export function createMembersView() {
   const node = el('div', { class: 'mview' });
@@ -62,7 +59,7 @@ export function createMembersView() {
       },
     }, [
       el('option', { value: '' }, '全部'),
-      ...Object.entries(STATUS_LABEL).map(([value, label]) =>
+      ...STATUS_FILTERS.map(([value, label]) =>
         el('option', { value, selected: filter.status === value }, label)),
     ]);
 
@@ -137,13 +134,14 @@ export function createMembersView() {
 
   function card(member) {
     return el('button', {
-      class: `mcard ${CARD_CLASS[member.status] ?? ''}`.trim(), type: 'button',
+      class: `mcard ${memberTone(member)}`.trim(), type: 'button',
       onClick: () => edit(member),
     }, [
       el('span', { class: 'mcard__top' }, [
         el('span', { class: 'mcard__name' }, member.name || '（沒有名字）'),
         el('span', { class: 'muted' }, `#${member.id}`),
         badge(STATUS_LABEL[member.status], STATUS_TONE[member.status]),
+        member.banned && badge('黑名單', 'danger'),
         member.role === ADMIN && badge('管理員', 'ink'),
         member.exempt && badge('不列入整理', 'ok'),
         !member.has_line_id && badge('沒有 LINE 帳號', 'neutral'),
@@ -177,6 +175,7 @@ export function createMembersView() {
       });
 
       const exempt = el('input', { type: 'checkbox', id: 'm-exempt', checked: member.exempt });
+      const banned = el('input', { type: 'checkbox', id: 'm-banned', checked: member.banned });
       const merge = !member.has_line_id && asyncButton('跟有 LINE 帳號的那一筆合併…', async () => {
         try {
           close();
@@ -193,6 +192,7 @@ export function createMembersView() {
         if (Number(role.value) !== member.role) changes.role = Number(role.value);
         if (email.value.trim() !== (member.email ?? '')) changes.email = email.value.trim();
         if (exempt.checked !== member.exempt) changes.exempt = exempt.checked;
+        if (banned.checked !== member.banned) changes.banned = banned.checked;
         if (!Object.keys(changes).length) {
           close();
           return;
@@ -220,6 +220,7 @@ export function createMembersView() {
           el('label', { for: 'm-role' }, '身分'), role,
           el('label', { for: 'm-email' }, '登入後台用的 Google 帳號'), email,
           el('label', { class: 'mcheck', for: 'm-exempt' }, [exempt, '不列入整理（榮譽席，系統不會把他算進名單）']),
+          el('label', { class: 'mcheck', for: 'm-banned' }, [banned, '黑名單（加入群組時小判官會發警告）']),
           mine && el('p', { class: 'muted' }, '不能改自己的身分與 email。'),
           !member.has_line_id && el('p', { class: 'muted' }, NO_LINE_HINT),
           merge,

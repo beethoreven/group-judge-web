@@ -115,11 +115,11 @@ export function createCleanup() {
       emit();
     },
 
-    /** 可以用「新增」加進名單的人：在群組裡、而且還不在名單上。沉默最久的排前面。 */
+    /** 可以用「新增」加進名單的人：在群組裡、不是黑名單、而且還不在名單上。沉默最久的排前面。 */
     addable(members) {
       const listed = new Set(rows.map((r) => r.user_id));
       return members
-        .filter((m) => m.status === 'joined' && !listed.has(m.id))
+        .filter((m) => m.status === 'joined' && !m.banned && !listed.has(m.id))
         .sort((a, b) => (b.silent_days ?? -1) - (a.silent_days ?? -1));
     },
 
@@ -127,7 +127,7 @@ export function createCleanup() {
       if (!members.length) return;
       for (const m of members) {
         rows.push({
-          user_id: m.id, name: m.name, status: m.status,
+          user_id: m.id, name: m.name, status: m.status, banned: m.banned,
           join_at: m.join_at, last_speak: m.last_speak, silent_days: m.silent_days,
           source: 'manual', state: 'kick', prior_whitelist_at: null, identified: false, late_speak: null,
         });
@@ -224,8 +224,8 @@ export function rowNotes(row) {
       title: 'Whitelisted before and silent ever since',
     });
   }
-  if (row.status === 'leaved') notes.push({ text: 'Left the group', tone: 'neutral' });
-  if (row.status === 'banned') notes.push({ text: 'Banned', tone: 'danger' });
+  if (row.banned) notes.push({ text: 'Banned', tone: 'danger' });
+  else if (row.status === 'leaved') notes.push({ text: 'Left the group', tone: 'neutral' });
   return notes;
 }
 
