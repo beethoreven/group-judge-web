@@ -148,7 +148,7 @@
 .table__flag input { width: 16px; height: 16px; vertical-align: middle; cursor: pointer; }
 .table__email { min-width: 230px; }
 /* 成員表：已離開整列灰底，黑名單整列黑底白字；能改的欄位（下拉、輸入框）維持白底。
-   以前是把已離開的字變淡，看起來像整列被鎖住不能改（案主 2026-10-08）。 */
+   以前是把已離開的字變淡，看起來像整列被鎖住不能改。 */
 .table tr.is-left td { background: var(--row-left); }
 .table tr.is-left .muted { color: var(--ink-soft); }
 .table tr.is-banned td { background: var(--row-banned); color: var(--on-banned); }

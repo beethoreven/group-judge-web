@@ -132,7 +132,7 @@ async function request(method, path, options = {}) {
     handlers.forbidden();
   }
 
-  // 資料庫逾時或連不上：不管是哪一個畫面發出的請求，都跳一則提示（案主 2026-10-10）。
+  // 資料庫逾時或連不上：不管是哪一個畫面發出的請求，都跳一則提示。
   // 少了這個，載入中的畫面只會換成「讀取失敗」，背景的請求更是什麼都看不出來。
   if (DATABASE_DOWN.includes(payload?.code)) {
     handlers.databaseDown(payload.error);

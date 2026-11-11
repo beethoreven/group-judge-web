@@ -194,8 +194,8 @@ function pickMergeTarget(member, candidates) {
 /**
  * 「讀取成員資料」：請後端向 LINE 確認每個人現在的名字。
  *
- * LINE 說查無此人的，不會自動標成離開——列出來問管理員（案主 2026-10-06：
- * 怕是 LINE 出錯）。回傳 true 代表資料有可能變了，畫面該重新載入。
+ * LINE 說查無此人的，不會自動標成離開——列出來問管理員
+ * （怕是 LINE 出錯）。回傳 true 代表資料有可能變了，畫面該重新載入。
  */
 export async function refreshFromLine() {
   const result = await api.post('/api/members/refresh');
@@ -256,7 +256,7 @@ function askMarkLeft(missing) {
 }
 
 /**
- * 「清除半年以前的紀錄」（案主 2026-10-06）：先問一次，再請後端刪。
+ * 「清除半年以前的紀錄」：先問一次，再請後端刪。
  * 只刪發話紀錄，成員、名單、白名單都不動。
  */
 export async function pruneOldRecords() {
@@ -305,8 +305,8 @@ export function filterMembers(members, { keyword = '', status = '', order = 'nam
   const shown = members.filter((m) =>
     (!status || (status === 'banned' ? m.banned : m.status === status)) &&
     (!key || (m.name || '').toLowerCase().includes(key) || (m.email || '').toLowerCase().includes(key)));
-  // 照 ID：新建的資料排在最後。剛換過來、有人改名接不上帳號時，用來找多出來的那一筆
-  // （案主 2026-10-31）。預設還是後端給的順序（狀態 → 身分 → 名字）。
+  // 照 ID：新建的資料排在最後。剛換過來、有人改名接不上帳號時，用來找多出來的那一筆。
+  // 預設還是後端給的順序（狀態 → 身分 → 名字）。
   return order === 'id' ? [...shown].sort((a, b) => a.id - b.id) : shown;
 }
 
